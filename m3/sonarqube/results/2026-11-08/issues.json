@@ -1,0 +1,155 @@
+{
+  "total": 3,
+  "p": 1,
+  "ps": 500,
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 500,
+    "total": 3
+  },
+  "effortTotal": 6,
+  "issues": [
+    {
+      "key": "32d9ae65-b23a-44af-9549-6970c5303ce6",
+      "rule": "SQLCC:C030",
+      "severity": "MINOR",
+      "component": "calidadsw-m3-sql-baseline:case1_pagila/schema_defective.sql",
+      "project": "calidadsw-m3-sql-baseline",
+      "flows": [],
+      "status": "OPEN",
+      "message": "File header comment was not found",
+      "effort": "2min",
+      "debt": "2min",
+      "author": "angelgabriel272018@gmail.com",
+      "tags": [
+        "maintainability"
+      ],
+      "creationDate": "2026-11-08T09:49:28-05:00",
+      "updateDate": "2026-11-08T14:20:15-05:00",
+      "type": "CODE_SMELL",
+      "scope": "MAIN",
+      "quickFixAvailable": false,
+      "messageFormattings": [],
+      "codeVariants": [],
+      "cleanCodeAttribute": "CONVENTIONAL",
+      "cleanCodeAttributeCategory": "CONSISTENT",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "LOW"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "prioritizedRule": false,
+      "fromSonarQubeUpdate": false,
+      "internalTags": [],
+      "linkedTicketStatus": "NOT_LINKED"
+    },
+    {
+      "key": "2b383111-4a92-47c8-91cd-8155440c7fb4",
+      "rule": "SQLCC:C030",
+      "severity": "MINOR",
+      "component": "calidadsw-m3-sql-baseline:case2_northwind/schema_defective.sql",
+      "project": "calidadsw-m3-sql-baseline",
+      "flows": [],
+      "status": "OPEN",
+      "message": "File header comment was not found",
+      "effort": "2min",
+      "debt": "2min",
+      "author": "angelgabriel272018@gmail.com",
+      "tags": [
+        "maintainability"
+      ],
+      "creationDate": "2026-11-08T09:49:28-05:00",
+      "updateDate": "2026-11-08T14:20:15-05:00",
+      "type": "CODE_SMELL",
+      "scope": "MAIN",
+      "quickFixAvailable": false,
+      "messageFormattings": [],
+      "codeVariants": [],
+      "cleanCodeAttribute": "CONVENTIONAL",
+      "cleanCodeAttributeCategory": "CONSISTENT",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "LOW"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "prioritizedRule": false,
+      "fromSonarQubeUpdate": false,
+      "internalTags": [],
+      "linkedTicketStatus": "NOT_LINKED"
+    },
+    {
+      "key": "9e7a23c0-7c9e-4139-91b1-d5a66bada034",
+      "rule": "SQLCC:C030",
+      "severity": "MINOR",
+      "component": "calidadsw-m3-sql-baseline:case3_synthetic/schema_defective.sql",
+      "project": "calidadsw-m3-sql-baseline",
+      "flows": [],
+      "status": "OPEN",
+      "message": "File header comment was not found",
+      "effort": "2min",
+      "debt": "2min",
+      "author": "angelgabriel272018@gmail.com",
+      "tags": [
+        "maintainability"
+      ],
+      "creationDate": "2026-11-08T09:49:28-05:00",
+      "updateDate": "2026-11-08T14:20:15-05:00",
+      "type": "CODE_SMELL",
+      "scope": "MAIN",
+      "quickFixAvailable": false,
+      "messageFormattings": [],
+      "codeVariants": [],
+      "cleanCodeAttribute": "CONVENTIONAL",
+      "cleanCodeAttributeCategory": "CONSISTENT",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "LOW"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "prioritizedRule": false,
+      "fromSonarQubeUpdate": false,
+      "internalTags": [],
+      "linkedTicketStatus": "NOT_LINKED"
+    }
+  ],
+  "components": [
+    {
+      "key": "calidadsw-m3-sql-baseline:case2_northwind/schema_defective.sql",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "schema_defective.sql",
+      "longName": "case2_northwind/schema_defective.sql",
+      "path": "case2_northwind/schema_defective.sql"
+    },
+    {
+      "key": "calidadsw-m3-sql-baseline:case1_pagila/schema_defective.sql",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "schema_defective.sql",
+      "longName": "case1_pagila/schema_defective.sql",
+      "path": "case1_pagila/schema_defective.sql"
+    },
+    {
+      "key": "calidadsw-m3-sql-baseline",
+      "enabled": true,
+      "qualifier": "TRK",
+      "name": "CALIDADSW Miembro 3 SQL baseline",
+      "longName": "CALIDADSW Miembro 3 SQL baseline"
+    },
+    {
+      "key": "calidadsw-m3-sql-baseline:case3_synthetic/schema_defective.sql",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "schema_defective.sql",
+      "longName": "case3_synthetic/schema_defective.sql",
+      "path": "case3_synthetic/schema_defective.sql"
+    }
+  ],
+  "facets": []
+}

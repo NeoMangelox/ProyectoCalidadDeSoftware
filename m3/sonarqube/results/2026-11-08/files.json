@@ -1,0 +1,38 @@
+{
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 500,
+    "total": 3
+  },
+  "baseComponent": {
+    "key": "calidadsw-m3-sql-baseline",
+    "name": "CALIDADSW Miembro 3 SQL baseline",
+    "qualifier": "TRK",
+    "tags": [],
+    "visibility": "public",
+    "isAiCodeFixEnabled": false
+  },
+  "components": [
+    {
+      "key": "calidadsw-m3-sql-baseline:case3_synthetic/schema_defective.sql",
+      "name": "schema_defective.sql",
+      "qualifier": "FIL",
+      "path": "case3_synthetic/schema_defective.sql",
+      "language": "sql"
+    },
+    {
+      "key": "calidadsw-m3-sql-baseline:case1_pagila/schema_defective.sql",
+      "name": "schema_defective.sql",
+      "qualifier": "FIL",
+      "path": "case1_pagila/schema_defective.sql",
+      "language": "sql"
+    },
+    {
+      "key": "calidadsw-m3-sql-baseline:case2_northwind/schema_defective.sql",
+      "name": "schema_defective.sql",
+      "qualifier": "FIL",
+      "path": "case2_northwind/schema_defective.sql",
+      "language": "sql"
+    }
+  ]
+}

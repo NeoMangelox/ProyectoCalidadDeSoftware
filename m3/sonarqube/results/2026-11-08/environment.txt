@@ -1,0 +1,12 @@
+date_local=2026-11-08
+repo_commit=bfb05a67ce74577992344cb1dd3590ff92641e93
+branch=miembro3/trabajo
+server_version=26.10.0.133078
+server_image=sonarqube:26.10.0.133078-community
+server_digest=sonarqube@sha256:f95aaa9016dd4e92c7d70691167a6d96dbb5d8acffd61eba1cb4335d364a7840
+plugin_version=1.4.0
+scanner_cli=8.1.0.6389
+scanner_image=sonarsource/sonar-scanner-cli:12.3.0.4285_8.1.0
+scanner_digest=sonarsource/sonar-scanner-cli@sha256:47956b669bf486bdad919e1cbd0533223515aa0b6d1d31763e5a3754942df6d7
+dialect=pssqlv2
+ce_task_id=0ec071a3-961a-4423-b15b-4a14a1e2cefa
