@@ -1,0 +1,28 @@
+{
+    "mcpServers": {
+        "postgres-pagila": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-postgres",
+                "postgresql://postgres:postgres@127.0.0.1:5432/pagila_defective"
+            ]
+        },
+        "postgres-northwind": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-postgres",
+                "postgresql://postgres:postgres@127.0.0.1:5432/northwind_defective"
+            ]
+        },
+        "postgres-synthetic": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-postgres",
+                "postgresql://postgres:postgres@127.0.0.1:5432/synthetic_defective"
+            ]
+        }
+    }
+}
