@@ -21,10 +21,11 @@ El sensor SQL externo `SqlCheckSensor` se omitió porque su ejecutable opcional 
 - `issues.json`, `files.json`, `measures.json`, `analyses.json`: resultados exportados desde la API de SonarQube.
 - `plugin-sql.json`, `profile-sql.json`, `rules-sql.json`, `system-status.json`: versión y configuración del análisis.
 - `environment.txt` e `inputs.sha256.txt`: imágenes, versiones, commit y huellas de los tres DDL originales.
+- `sonarqube-dashboard.jpeg`: captura auténtica del panel del proyecto, tomada con la sesión iniciada; muestra 357 líneas de código y 3 incidencias abiertas.
 
 Los tokens y la contraseña de administración se guardan fuera del repositorio. Los DDL y manifiestos no se modificaron.
 
-No se guardó una captura del panel: la sesión de navegador disponible solicita inicio de sesión. Las respuestas de la API y los registros anteriores son la evidencia verificable de esta ejecución; la captura queda pendiente de abrir el panel con una sesión autenticada.
+La captura complementa las respuestas de la API y los registros, que conservan el detalle verificable de esta ejecución. El panel muestra el estado general del proyecto; los archivos JSON contienen la correspondencia de cada incidencia con su DDL.
 
 ## Repetición
 
