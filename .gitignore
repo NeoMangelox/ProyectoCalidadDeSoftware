@@ -1,1 +1,10 @@
 /.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.scannerwork/
+.sqlfluffcache
+.env
+.env.*
+!.env.example
+sonar-sql-plugin*.jar
