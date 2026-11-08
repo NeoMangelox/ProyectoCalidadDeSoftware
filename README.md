@@ -79,7 +79,9 @@ SQLFluff produjo 189 diagnósticos en Pagila, 96 en Northwind y 37 en Synthetic,
 
 SonarQube **Community Build 26.10.0.133078**, gratuito, con `sonar-sql-plugin` 1.4.0 y SonarScanner CLI 8.1.0.6389 analizó los tres DDL como SQL. Registró tres incidencias `SQLCC:C030`, una por archivo, sobre comentarios de cabecera. La configuración está en [`sonar-project.properties`](sonar-project.properties) y las [evidencias del servidor](m3/sonarqube/results/2026-11-08) contienen incidencias, reglas activas, registros y captura. El sensor externo opcional `SqlCheckSensor` no se ejecutó porque faltaba `/usr/bin/sqlcheck`.
 
-La [matriz individual](m3/matriz_deteccion.csv) y el [análisis de Fase 8](m3/fase8_analisis.md) comparan cada salida con los 28 defectos de los manifiestos. **En esta ejecución**, cada herramienta obtuvo 0 TP y 28 FN para las cuatro clases relacionales, con detección observada del 0 % y tasa de FN del 100 %. Las incidencias de estilo y cabecera no se cuentan como detecciones relacionales. Estos valores no prueban el comportamiento de otras versiones, perfiles o esquemas, ni significan que los DDL carezcan de otros problemas.
+Un [control SQL separado](m3/sonarqube/header_control.sql) también activó `C030`; la [respuesta de la API](m3/sonarqube/control_issues.json) respalda esa comprobación. El control prueba el funcionamiento de esa regla concreta, sin sustituir una validación exhaustiva del plugin.
+
+La [matriz individual](m3/matriz_deteccion.csv) y el [análisis de Fase 8](<m3/Analisis de Resultados.md>) comparan cada salida con los 28 defectos de los manifiestos. **En esta ejecución**, cada herramienta obtuvo 0 TP y 28 FN para las cuatro clases relacionales, con detección observada del 0 % y tasa de FN del 100 %. Las incidencias de estilo y cabecera no se cuentan como detecciones relacionales. Estos valores no prueban el comportamiento de otras versiones, perfiles o esquemas, ni significan que los DDL carezcan de otros problemas.
 
 ---
 
