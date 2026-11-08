@@ -1,10 +1,4 @@
 # Benchmark Experimental SQL-Backend (PostgreSQL 16/17)
-> **Proyecto:** *Auditoría y Optimización de Esquemas PostgreSQL mediante Modelos de Lenguaje (LLMs) para el Aseguramiento de la Calidad del Backend*  
-> **Producto Acreditable:** Artículo Científico (Paper) en formato IEEE / ACM Conference Template  
-> **Autor Base:** Miembro 2 (Ingeniero de Datos & Backend)  
-> **Edición y Guía Operativa:** Miembro 5 (Coordinador General & Especialista en Métricas)
-
----
 
 ## 1. Visión General del Benchmark
 
