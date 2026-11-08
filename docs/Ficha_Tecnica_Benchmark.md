@@ -71,7 +71,7 @@ un `GET /peliculas?feature=Trailers` que parsee el CSV (no incluido: los 3 endpo
 | Miembro | Archivos |
 |---|---|
 | 1 (SLR) | esta ficha + `defects_manifest.json` (citar taxonomía y conteos) |
-| 3 (linters) | `case*/schema_defective.sql`. Vista previa: SQLFluff `--dialect postgres` no reporta ningún error de parseo ni semántico; solo reglas de estilo (`LT01`, `LT05`, `CP05`, `RF04`…) |
+| 3 (linters) | `case*/schema_defective.sql`. Ejecución documentada en `../m3/fase8_analisis.md`: SQLFluff no emitió errores `PRS`/`LXR`/`TMP` y registró `CP03`, `CP05`, `LT01`, `LT02` y `RF04`; SonarQube registró tres `SQLCC:C030`. Ningún hallazgo correspondió a los 28 defectos relacionales del manifiesto. |
 | 4 (agente MCP) | `docker-compose.yml` o `scripts/setup_databases.sh` → BD `*_defective` pobladas; `defects_manifest.json` como verdad de terreno; `known_native_smells` para no contar falsos positivos |
 | 5 (métricas) | `backend_defensive/` vs `backend_normalized/` (mismo contrato de API); marcadores `DEFENSIVE-BEGIN/END`; `tools/measure_defensive.py` |
 

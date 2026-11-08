@@ -46,10 +46,9 @@ PGHOST=127.0.0.1 PGUSER=postgres PGPASSWORD=postgres bash scripts/setup_database
 ## 3. Guía Operativa para el Miembro 3 (Auditor de Calidad & Linters)
 
 ### 3.1. Objetivo Metodológico
-El Miembro 3 debe instrumentar el **Nivel 1 del Experimento (Grupo de Control)**: evaluar cómo responden los linters estáticos tradicionales basados en AST (SQLFluff y SonarQube) frente a los esquemas relacionales defectuosos.
+El Miembro 3 instrumenta el **Nivel 1 del Experimento (Grupo de Control)**: evaluar cómo responden SQLFluff y SonarQube frente a los tres esquemas relacionales defectuosos, usando los manifiestos como verdad de referencia.
 
-> **Hipótesis a Demostrar ($H_1$):**  
-> *Los linters estáticos basados en gramáticas sintácticas presentan un **100% de falsos negativos** ante defectos semánticos relacionales (1FN, 2FN, 3FN y ausencia de FKs), certificando como "código limpio" esquemas con anomalías graves.*
+> **Hipótesis evaluada ($H_1$):** en estos tres DDL, las herramientas no identificarán los defectos inyectados de 1FN, 2FN, 3FN y ausencia de claves foráneas. La conclusión se limita a las versiones, reglas y archivos efectivamente analizados.
 
 ### 3.2. Archivos de Trabajo para M3
 - **Esquemas a Auditar:**
@@ -63,37 +62,24 @@ El Miembro 3 debe instrumentar el **Nivel 1 del Experimento (Grupo de Control)**
 
 ### 3.3. Instrucciones de Ejecución con SQLFluff
 
-1. **Instalación de SQLFluff:**
-   ```bash
-   pip install sqlfluff
-   # O ejecutar dinámicamente con uv: uvx sqlfluff ...
-   ```
+Se usaron Python 3.12.10 y SQLFluff 4.5.0, fijado en [`m3/requirements.txt`](m3/requirements.txt). La configuración [`.sqlfluff`](.sqlfluff) define el dialecto PostgreSQL. Desde la raíz del repositorio:
 
-2. **Ejecución sobre los Casos de Estudio (Dialecto PostgreSQL obligatorio):**
-   ```bash
-   # Auditar el Caso Sintético:
-   sqlfluff lint case3_synthetic/schema_defective.sql --dialect postgres
+```bash
+python -m pip install -r m3/requirements.txt
+sqlfluff lint case1_pagila/schema_defective.sql --format json
+sqlfluff lint case2_northwind/schema_defective.sql --format json
+sqlfluff lint case3_synthetic/schema_defective.sql --format json
+```
 
-   # Auditar todos los esquemas defectuosos en una sola ejecución:
-   sqlfluff lint case1_pagila/schema_defective.sql case2_northwind/schema_defective.sql case3_synthetic/schema_defective.sql --dialect postgres
-   ```
-
-3. **Exportación Estructurada (JSON) para la Matriz del Paper:**
-   ```bash
-   sqlfluff lint case3_synthetic/schema_defective.sql --dialect postgres --format json > m3_sqlfluff_synthetic.json
-   ```
+Los [tres resultados JSON](m3/sqlfluff/results/2026-11-08) originales se conservan en `m3/sqlfluff/results/2026-11-08/`. El código de salida fue 1 en los tres casos por infracciones de estilo; no se ejecutó `fix`.
 
 ### 3.4. Cómo Interpretar y Reportar los Hallazgos
-- Observarás que SQLFluff **no arroja ningún error de parseo (Parse Errors = 0)** y **ninguna regla de smell relacional**.
-- Las únicas advertencias reportadas son cosméticas de layout:
-  - `LT01` (Trailing whitespace en comentarios y líneas vacías).
-  - `LT05` (Line is too long > 80 caracteres en comentarios DDL).
-- **Elaboración de la Matriz de Confusión para la Sección IV-A del Paper:**
-  - $\text{Verdaderos Positivos (TP)} = 0$ (no detectó ninguna 1FN, 2FN, 3FN ni falta de FK).
-  - $\text{Falsos Negativos (FN)} = 28$ (los 28 defectos documentados en los manifiestos pasaron inadvertidos).
-  - $\text{Tasa de Detección de Smells Relacionales} = 0\%$.
-  - $\text{Tasa de Falsos Negativos} = 100\%$.
-- **Justificación Teórica:** El AST valida únicamente que los tokens cumplan la gramática BNF de PostgreSQL (`CREATE TABLE`, tipos válidos), pero no tiene visibilidad sobre las dependencias funcionales entre atributos ($X \rightarrow Y$) ni sobre la ausencia de restricciones de integridad referencial.
+
+SQLFluff produjo 189 diagnósticos en Pagila, 96 en Northwind y 37 en Synthetic, con códigos `CP03`, `CP05`, `LT01`, `LT02` y `RF04`. No emitió diagnósticos de parseo `PRS`, `LXR` ni `TMP`. Los avisos tratan de estilo, capitalización o nombres de identificadores, incluso cuando aparecen en la misma línea que un defecto marcado.
+
+SonarQube **Community Build 26.10.0.133078**, gratuito, con `sonar-sql-plugin` 1.4.0 y SonarScanner CLI 8.1.0.6389 analizó los tres DDL como SQL. Registró tres incidencias `SQLCC:C030`, una por archivo, sobre comentarios de cabecera. La configuración está en [`sonar-project.properties`](sonar-project.properties) y las [evidencias del servidor](m3/sonarqube/results/2026-11-08) contienen incidencias, reglas activas, registros y captura. El sensor externo opcional `SqlCheckSensor` no se ejecutó porque faltaba `/usr/bin/sqlcheck`.
+
+La [matriz individual](m3/matriz_deteccion.csv) y el [análisis de Fase 8](m3/fase8_analisis.md) comparan cada salida con los 28 defectos de los manifiestos. **En esta ejecución**, cada herramienta obtuvo 0 TP y 28 FN para las cuatro clases relacionales, con detección observada del 0 % y tasa de FN del 100 %. Las incidencias de estilo y cabecera no se cuentan como detecciones relacionales. Estos valores no prueban el comportamiento de otras versiones, perfiles o esquemas, ni significan que los DDL carezcan de otros problemas.
 
 ---
 
