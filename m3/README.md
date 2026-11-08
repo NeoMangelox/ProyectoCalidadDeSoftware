@@ -24,13 +24,14 @@ SQLFluff devolvió código 1 en los tres casos por infracciones de estilo. Los c
 
 SonarScanner indexó los tres DDL como lenguaje `sql` y ejecutó `SQLSensor` con código de salida 0. La tarea del servidor terminó en `SUCCESS`. Las tres incidencias `C030` indican ausencia de un comentario de cabecera multilínea; los DDL empiezan con comentarios `--`. El sensor externo `SqlCheckSensor` se omitió porque no estaba instalado su ejecutable opcional `/usr/bin/sqlcheck`. El panel registró 357 líneas de código, 3 *code smells*, 0 bugs y 0 vulnerabilidades.
 
-Estos diagnósticos **no equivalen a defectos relacionales detectados**. La comparación individual con los 28 defectos de los manifiestos, la matriz TP/FN y las tasas de detección siguen pendientes de la Fase 8. No se afirma una tasa de falsos negativos antes de esa correspondencia.
+Estos diagnósticos **no equivalen a defectos relacionales detectados**. La [Fase 8](fase8_analisis.md) compara cada salida con los 28 defectos de los manifiestos. En esta ejecución y con el criterio documentado, ambas herramientas obtuvieron 0 TP y 28 FN para las cuatro clases relacionales evaluadas; ese resultado no se extrapola a otros esquemas ni configuraciones.
 
 ## Evidencias conservadas
 
 - [`sqlfluff/results/2026-11-08`](sqlfluff/results/2026-11-08): tres respuestas JSON originales y el control de estilo. Las salidas de error estándar estuvieron vacías; los códigos de salida de los cuatro análisis fueron 1 por infracciones.
 - [`sonarqube/results/2026-11-08`](sonarqube/results/2026-11-08): `issues.json`, `files.json`, `measures.json`, `task.json`, versión del plugin, perfil y reglas activas, registros de escáner y servidor, versiones e imágenes con digestos.
 - [`sonarqube-dashboard.jpeg`](sonarqube/results/2026-11-08/sonarqube-dashboard.jpeg): captura del panel con la sesión iniciada; muestra el proyecto y sus tres incidencias abiertas.
+- [`matriz_deteccion.csv`](matriz_deteccion.csv) y [`fase8_analisis.md`](fase8_analisis.md): correspondencia individual, métricas observadas y límites de interpretación.
 
 ## Repetición
 
