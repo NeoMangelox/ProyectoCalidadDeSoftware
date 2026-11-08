@@ -1,0 +1,136 @@
+{
+  "case": "Caso 1 - Pagila (Sakila PostgreSQL), nucleo de 15 tablas",
+  "defects": [
+    {
+      "id": "D1-01",
+      "type": "violacion_1FN",
+      "table": "film",
+      "columns": [
+        "special_features"
+      ],
+      "description": "Lista CSV de extras ('Trailers,Deleted Scenes') en un TEXT.",
+      "expected_fix": "Tabla film_special_feature(film_id, feature) con PK compuesta.",
+      "exercised_by": null
+    },
+    {
+      "id": "D2-01",
+      "type": "violacion_2FN",
+      "table": "film_actor",
+      "columns": [
+        "actor_full_name"
+      ],
+      "description": "Nombre del actor repetido en la tabla puente.",
+      "expected_fix": "Eliminar la columna; el nombre vive en actor.",
+      "exercised_by": null,
+      "functional_dependency": "actor_id -> actor_full_name (PK: actor_id, film_id)"
+    },
+    {
+      "id": "D2-02",
+      "type": "violacion_2FN",
+      "table": "film_category",
+      "columns": [
+        "category_name"
+      ],
+      "description": "Nombre de categoria repetido en la tabla puente.",
+      "expected_fix": "Eliminar la columna; el nombre vive en category.",
+      "exercised_by": null,
+      "functional_dependency": "category_id -> category_name (PK: film_id, category_id)"
+    },
+    {
+      "id": "D3-01",
+      "type": "violacion_3FN",
+      "table": "inventory",
+      "columns": [
+        "film_title"
+      ],
+      "description": "Titulo de la pelicula copiado en inventory.",
+      "expected_fix": "Eliminar la columna; obtenerlo via JOIN film.",
+      "exercised_by": "PUT /inventario",
+      "functional_dependency": "inventory_id -> film_id -> film_title"
+    },
+    {
+      "id": "D3-02",
+      "type": "violacion_3FN",
+      "table": "address",
+      "columns": [
+        "city_name"
+      ],
+      "description": "Nombre de ciudad copiado en address.",
+      "expected_fix": "Eliminar la columna; obtenerlo via JOIN city.",
+      "exercised_by": null,
+      "functional_dependency": "address_id -> city_id -> city_name"
+    },
+    {
+      "id": "D4-01",
+      "type": "falta_integridad_referencial",
+      "table": "inventory",
+      "columns": [
+        "film_id"
+      ],
+      "description": "Sin FK a film.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES film ON DELETE RESTRICT",
+      "exercised_by": "PUT /inventario",
+      "missing_fk_references": "film(film_id)"
+    },
+    {
+      "id": "D4-02",
+      "type": "falta_integridad_referencial",
+      "table": "inventory",
+      "columns": [
+        "store_id"
+      ],
+      "description": "Sin FK a store.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES store ON DELETE RESTRICT",
+      "exercised_by": "PUT /inventario",
+      "missing_fk_references": "store(store_id)"
+    },
+    {
+      "id": "D4-03",
+      "type": "falta_integridad_referencial",
+      "table": "rental",
+      "columns": [
+        "inventory_id"
+      ],
+      "description": "Sin FK a inventory.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES inventory ON DELETE RESTRICT",
+      "exercised_by": "PUT /inventario",
+      "missing_fk_references": "inventory(inventory_id)"
+    },
+    {
+      "id": "D4-04",
+      "type": "falta_integridad_referencial",
+      "table": "rental",
+      "columns": [
+        "customer_id"
+      ],
+      "description": "Sin FK a customer.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES customer ON DELETE RESTRICT",
+      "exercised_by": null,
+      "missing_fk_references": "customer(customer_id)"
+    },
+    {
+      "id": "D4-05",
+      "type": "falta_integridad_referencial",
+      "table": "payment",
+      "columns": [
+        "rental_id"
+      ],
+      "description": "Sin FK a rental.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES rental ON DELETE RESTRICT",
+      "exercised_by": null,
+      "missing_fk_references": "rental(rental_id)"
+    }
+  ],
+  "known_native_smells": [
+    "customer.activebool y customer.active son redundantes (nativo de Sakila).",
+    "address.phone / customer.email: atributos de contacto sin tabla propia (nativo, no inyectado)."
+  ],
+  "dbms": "PostgreSQL 16/17",
+  "defect_count": 10,
+  "defect_count_by_type": {
+    "violacion_1FN": 1,
+    "violacion_2FN": 2,
+    "violacion_3FN": 2,
+    "falta_integridad_referencial": 5
+  }
+}

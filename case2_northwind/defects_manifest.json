@@ -1,0 +1,138 @@
+{
+  "case": "Caso 2 - Northwind-PostgreSQL, 14 tablas",
+  "defects": [
+    {
+      "id": "D1-01",
+      "type": "violacion_1FN",
+      "table": "customers",
+      "columns": [
+        "phones"
+      ],
+      "description": "Telefonos separados por coma en una columna (reemplaza a phone).",
+      "expected_fix": "Tabla customer_phones(customer_id, phone).",
+      "exercised_by": "POST /clientes"
+    },
+    {
+      "id": "D2-01",
+      "type": "violacion_2FN",
+      "table": "order_details",
+      "columns": [
+        "product_name"
+      ],
+      "description": "Nombre del producto copiado en la linea de pedido.",
+      "expected_fix": "Eliminar la columna; JOIN products.",
+      "exercised_by": "POST /pedidos",
+      "functional_dependency": "product_id -> product_name (PK: order_id, product_id)"
+    },
+    {
+      "id": "D2-02",
+      "type": "violacion_2FN",
+      "table": "order_details",
+      "columns": [
+        "quantity_per_unit"
+      ],
+      "description": "Presentacion del producto copiada en la linea de pedido.",
+      "expected_fix": "Eliminar la columna; JOIN products.",
+      "exercised_by": "POST /pedidos",
+      "functional_dependency": "product_id -> quantity_per_unit (PK: order_id, product_id)"
+    },
+    {
+      "id": "D3-01",
+      "type": "violacion_3FN",
+      "table": "orders",
+      "columns": [
+        "shipper_name"
+      ],
+      "description": "Nombre del transportista copiado en orders.",
+      "expected_fix": "Eliminar la columna; JOIN shippers.",
+      "exercised_by": "POST /pedidos",
+      "functional_dependency": "order_id -> ship_via -> shipper_name"
+    },
+    {
+      "id": "D4-01",
+      "type": "falta_integridad_referencial",
+      "table": "orders",
+      "columns": [
+        "customer_id"
+      ],
+      "description": "Sin FK a customers.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES customers ON DELETE RESTRICT",
+      "exercised_by": "POST /pedidos",
+      "missing_fk_references": "customers(customer_id)"
+    },
+    {
+      "id": "D4-02",
+      "type": "falta_integridad_referencial",
+      "table": "orders",
+      "columns": [
+        "ship_via"
+      ],
+      "description": "Sin FK a shippers.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES shippers ON DELETE RESTRICT",
+      "exercised_by": "POST /pedidos",
+      "missing_fk_references": "shippers(shipper_id)"
+    },
+    {
+      "id": "D4-03",
+      "type": "falta_integridad_referencial",
+      "table": "order_details",
+      "columns": [
+        "order_id"
+      ],
+      "description": "Sin FK a orders.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES orders ON DELETE CASCADE",
+      "exercised_by": "POST /pedidos",
+      "missing_fk_references": "orders(order_id)"
+    },
+    {
+      "id": "D4-04",
+      "type": "falta_integridad_referencial",
+      "table": "order_details",
+      "columns": [
+        "product_id"
+      ],
+      "description": "Sin FK a products.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES products ON DELETE RESTRICT",
+      "exercised_by": "POST /pedidos",
+      "missing_fk_references": "products(product_id)"
+    },
+    {
+      "id": "D4-05",
+      "type": "falta_integridad_referencial",
+      "table": "products",
+      "columns": [
+        "category_id"
+      ],
+      "description": "Sin FK a categories.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES categories ON DELETE RESTRICT",
+      "exercised_by": null,
+      "missing_fk_references": "categories(category_id)"
+    },
+    {
+      "id": "D4-06",
+      "type": "falta_integridad_referencial",
+      "table": "products",
+      "columns": [
+        "supplier_id"
+      ],
+      "description": "Sin FK a suppliers.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES suppliers ON DELETE RESTRICT",
+      "exercised_by": null,
+      "missing_fk_references": "suppliers(supplier_id)"
+    }
+  ],
+  "known_native_smells": [
+    "customers/suppliers/employees: postal_code -> city, region, country (3FN latente del Northwind original).",
+    "orders.ship_* repite datos de direccion; es una instantanea al momento del envio (defendible, no se puntua).",
+    "unit_price/freight como REAL (tipo inadecuado para dinero; no es un defecto relacional).",
+    "us_states: tabla aislada sin relaciones (nativo)."
+  ],
+  "dbms": "PostgreSQL 16/17",
+  "defect_count": 10,
+  "defect_count_by_type": {
+    "violacion_1FN": 1,
+    "violacion_2FN": 2,
+    "violacion_3FN": 1,
+    "falta_integridad_referencial": 6
+  }
+}

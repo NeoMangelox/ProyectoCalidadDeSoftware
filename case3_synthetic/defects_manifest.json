@@ -1,0 +1,109 @@
+{
+  "case": "Caso 3 - Sintetico de Control PG, 5 tablas (mutaciones aisladas, estilo DNBench)",
+  "defects": [
+    {
+      "id": "D1-01",
+      "type": "violacion_1FN",
+      "table": "clientes",
+      "columns": [
+        "telefonos"
+      ],
+      "description": "Lista CSV de telefonos.",
+      "expected_fix": "Tabla clientes_telefonos(cliente_id, telefono).",
+      "exercised_by": null
+    },
+    {
+      "id": "D2-01",
+      "type": "violacion_2FN",
+      "table": "detalle_pedido",
+      "columns": [
+        "nombre_producto"
+      ],
+      "description": "Nombre del producto en tabla con PK compuesta.",
+      "expected_fix": "Eliminar la columna; JOIN productos.",
+      "exercised_by": null,
+      "functional_dependency": "producto_id -> nombre_producto (PK: pedido_id, producto_id)"
+    },
+    {
+      "id": "D2-02",
+      "type": "violacion_2FN",
+      "table": "detalle_pedido",
+      "columns": [
+        "categoria_producto"
+      ],
+      "description": "Categoria del producto en tabla con PK compuesta.",
+      "expected_fix": "Eliminar la columna; JOIN productos.",
+      "exercised_by": null,
+      "functional_dependency": "producto_id -> categoria_producto (PK: pedido_id, producto_id)"
+    },
+    {
+      "id": "D3-01",
+      "type": "violacion_3FN",
+      "table": "clientes",
+      "columns": [
+        "ciudad"
+      ],
+      "description": "La ciudad depende del codigo postal, no del cliente.",
+      "expected_fix": "Tabla codigos_postales(codigo_postal, ciudad) + FK.",
+      "exercised_by": null,
+      "functional_dependency": "cliente_id -> codigo_postal -> ciudad"
+    },
+    {
+      "id": "D4-01",
+      "type": "falta_integridad_referencial",
+      "table": "pedidos",
+      "columns": [
+        "cliente_id"
+      ],
+      "description": "Sin FK a clientes.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES clientes ON DELETE RESTRICT",
+      "exercised_by": null,
+      "missing_fk_references": "clientes(cliente_id)"
+    },
+    {
+      "id": "D4-02",
+      "type": "falta_integridad_referencial",
+      "table": "detalle_pedido",
+      "columns": [
+        "pedido_id"
+      ],
+      "description": "Sin FK a pedidos.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES pedidos ON DELETE CASCADE",
+      "exercised_by": null,
+      "missing_fk_references": "pedidos(pedido_id)"
+    },
+    {
+      "id": "D4-03",
+      "type": "falta_integridad_referencial",
+      "table": "detalle_pedido",
+      "columns": [
+        "producto_id"
+      ],
+      "description": "Sin FK a productos.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES productos ON DELETE RESTRICT",
+      "exercised_by": null,
+      "missing_fk_references": "productos(producto_id)"
+    },
+    {
+      "id": "D4-04",
+      "type": "falta_integridad_referencial",
+      "table": "envios",
+      "columns": [
+        "pedido_id"
+      ],
+      "description": "Sin FK a pedidos.",
+      "expected_fix": "FOREIGN KEY ... REFERENCES pedidos ON DELETE CASCADE",
+      "exercised_by": null,
+      "missing_fk_references": "pedidos(pedido_id)"
+    }
+  ],
+  "known_native_smells": [],
+  "dbms": "PostgreSQL 16/17",
+  "defect_count": 8,
+  "defect_count_by_type": {
+    "violacion_1FN": 1,
+    "violacion_2FN": 2,
+    "violacion_3FN": 1,
+    "falta_integridad_referencial": 4
+  }
+}
