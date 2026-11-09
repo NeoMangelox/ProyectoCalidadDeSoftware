@@ -1,0 +1,20 @@
+{
+  "model": "gemini-3.8-flash",
+  "reasoning_effort": "high",
+  "inference_parameters": {
+    "temperature": 0.0,
+    "top_k": 1,
+    "top_p": 1.0,
+    "seed": 42,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0
+  },
+  "rationale": "Configuración determinista para el benchmark de normalización de bases de datos. Combina la capacidad analítica profunda de Gemini 3.8 Flash con High Thinking Budget y Greedy Decoding (T=0, Top-K=1) para eliminar la varianza estocástica y aislar empíricamente las hipótesis H2 y H3.",
+  "metadata": {
+    "project": "Benchmark Experimental SQL-Backend",
+    "role": "Miembro 4 - Prompt & Agentic AI",
+    "target_rdbms": "PostgreSQL 16",
+    "reproducibility_standard": "IEEE / ACM Experimental Software Engineering"
+  }
+}
+

@@ -5,8 +5,20 @@ Validador determinista anti-alucinaciones para scripts DDL en PostgreSQL.
 Aplica el protocolo transaccional BEGIN ... ROLLBACK para verificar compilacion sin alterar la base de datos.
 """
 
+import os
 import sys
 import argparse
+
+if sys.platform == "win32":
+    for p in [r"C:\Program Files\PostgreSQL\18\bin", r"C:\Program Files\PostgreSQL\16\bin", r"C:\Program Files\PostgreSQL\17\bin"]:
+        if os.path.exists(p):
+            try:
+                os.add_dll_directory(p)
+            except Exception:
+                pass
+            os.environ["PATH"] = p + ";" + os.environ.get("PATH", "")
+            break
+
 import psycopg
 
 def validate_ddl(host: str, port: int, user: str, password: str, dbname: str, sql_file: str) -> bool:
