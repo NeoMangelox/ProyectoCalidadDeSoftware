@@ -1,0 +1,21 @@
+{
+  "task": {
+    "id": "0ec071a3-961a-4423-b15b-4a14a1e2cefa",
+    "type": "REPORT",
+    "componentId": "671a9bdb-2ba3-4a90-8a1b-6e7a5384cfb1",
+    "componentKey": "calidadsw-m3-sql-baseline",
+    "componentName": "CALIDADSW Miembro 3 SQL baseline",
+    "componentQualifier": "TRK",
+    "analysisId": "74c7d110-74e6-4bc0-a300-e66712868820",
+    "status": "SUCCESS",
+    "submittedAt": "2026-11-08T14:20:26-05:00",
+    "submitterLogin": "admin",
+    "startedAt": "2026-11-08T14:20:28-05:00",
+    "executedAt": "2026-11-08T14:20:29-05:00",
+    "executionTimeMs": 1460,
+    "hasScannerContext": true,
+    "warningCount": 0,
+    "warnings": [],
+    "infoMessages": []
+  }
+}

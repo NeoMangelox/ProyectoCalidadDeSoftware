@@ -1,0 +1,27 @@
+{
+  "profiles": [
+    {
+      "key": "0ca93512-e0b1-4af0-91d4-ecc545aab26e",
+      "name": "SQL rules",
+      "language": "sql",
+      "languageName": "SQL",
+      "isInherited": false,
+      "isDefault": true,
+      "activeRuleCount": 20,
+      "activeDeprecatedRuleCount": 0,
+      "rulesUpdatedAt": "2026-11-08T13:37:40-05:00",
+      "lastUsed": "2026-11-08T14:20:15-05:00",
+      "isBuiltIn": true,
+      "actions": {
+        "edit": false,
+        "setAsDefault": false,
+        "copy": true,
+        "associateProjects": false,
+        "delete": false
+      }
+    }
+  ],
+  "actions": {
+    "create": true
+  }
+}

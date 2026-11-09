@@ -1,0 +1,15 @@
+{
+  "key": "sql",
+  "name": "SQL language plugin",
+  "description": "SQL plugin for SonarQube",
+  "version": "1.4.0",
+  "license": "",
+  "editionBundled": false,
+  "homepageUrl": "https://github.com/gretard/sonar-sql-plugin",
+  "filename": "sonar-sql-plugin-1.4.0.jar",
+  "hash": "32c1df761258359ebde8b52d77d055a8",
+  "sonarLintSupported": false,
+  "updatedAt": 1794163067492,
+  "type": "EXTERNAL",
+  "requiredForLanguages": []
+}
