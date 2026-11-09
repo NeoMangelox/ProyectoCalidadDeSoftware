@@ -1,264 +1,58 @@
-# Benchmark Experimental SQL-Backend (PostgreSQL 16/17)
+# Agente Autónomo MCP y Validación *Dry-Run* para PostgreSQL (`agente-mcp-normalizacion`)
 
-## 1. Visión General del Benchmark
-
-Este repositorio contiene el **banco de pruebas experimental unificado** para evaluar la auditoría y corrección de esquemas relacionales defectuosos en **PostgreSQL**, así como su impacto directo en la deuda técnica y complejidad ciclomática del código backend.
-
-El benchmark implementa de forma estricta las invariantes metodológicas del proyecto:
-1. **Motor RDBMS Único:** 100% PostgreSQL nativo (con tipos estándar `TIMESTAMPTZ`, `BIGINT GENERATED ALWAYS AS IDENTITY` y llaves foráneas declarativas).
-2. **3 Casos de Estudio Canónicos y Controlados:**
-   - **Caso 1 (`case1_pagila`):** Núcleo OLTP transaccional de alquileres e inventario (15 tablas defectuosas $\rightarrow$ 16 tablas normalizadas, 10 defectos).
-   - **Caso 2 (`case2_northwind`):** Sistema clásico de órdenes, clientes y proveedores adaptado a PostgreSQL (14 tablas defectuosas $\rightarrow$ 15 tablas normalizadas, 10 defectos).
-   - **Caso 3 (`case3_synthetic`):** Micro-benchmark sintético de control inspirado en *DNBench (2026)* (5 tablas defectuosas $\rightarrow$ 7 tablas normalizadas, 8 defectos).
-3. **Taxonomía de 4 Smells Relacionales (28 Defectos Totales):**
-   - **Violación 1FN (Jaywalking / CSV):** Listas multivaluadas en columnas de texto plano.
-   - **Violación 2FN (Dependencias Parciales):** Atributos no clave dependientes de un subconjunto de una PK compuesta.
-   - **Violación 3FN (Dependencias Transitivas):** Atributos dependientes de columnas no clave (e.g. `codigo_postal -> ciudad`).
-   - **Ausencia de Claves Foráneas (Keyless Entry):** Relaciones lógicas sin restricción `FOREIGN KEY`, provocando riesgo de registros huérfanos.
-4. **Backend Dual en FastAPI:** Una versión con código defensivo (`backend_defensive/`) y una versión limpia delegada en la base de datos (`backend_normalized/`), ambas compartiendo exactamente el mismo contrato de API.
+> **Alcance de la Rama:** Diseño experimental e infraestructura determinista para comparar estrategias de Inteligencia Artificial de **Nivel 2 (Zero-Shot y Chain-of-Thought estático)** frente a **Nivel 3 (Agente Autónomo con MCP Server, Skill procedimental y validación transaccional *Dry-Run*)** sobre 9 corridas (`EXP-01`–`EXP-09`), respondiendo $RQ_2$ y validando $H_2$.
 
 ---
 
-## 2. Puesta en Marcha Rápida (Infraestructura PostgreSQL)
+## 1. Propósito Metodológico
 
-El proyecto incluye un entorno Docker listo para levantar las **6 bases de datos precargadas** (3 casos $\times$ {`_defective`, `_ground_truth`}) con sus esquemas DDL y datos semilla (*seeds*):
+Cuando un LLM opera "a ciegas" sobre texto DDL crudo (*Zero-Shot* o *CoT* sin herramientas), desconoce nombres exactos del catálogo y la presencia de registros huérfanos o listas delimitadas en datos reales. Esta rama implementa una arquitectura agéntica determinista que acopla:
+1. **Introspección viva vía MCP (`@modelcontextprotocol/server-postgres`):** Inspección de `information_schema` y muestreo semántico real (`SELECT ... LIMIT 5`) mediante `tools/introspect_db.py`.
+2. **Skill Procedimental (`skills/postgres-schema-auditor/SKILL.md`):** Protocolo *Chain-of-Thought* en 5 pasos (Introspección $\to$ Muestreo 1FN $\to$ Inferencia de Dependencias $\to$ Clasificación Taxonómica $\to$ Emisión de DDL nativo PostgreSQL 16).
+3. **Bucle Cerrado *Dry-Run* (`tools/dry_run_validator.py`):** Ejecución real del DDL dentro de transacciones revertibles `BEGIN ... ROLLBACK` vía `psycopg`, capturando códigos `SQLSTATE` (`23503`, `42830`, `42703`) como retroalimentación determinista sin alterar el servidor.
+4. **Decodificación Reproducible (`config/inference_config.json`):** Modelo base **`gemini-3.8-flash`** (`reasoning_effort = high`) bajo ***Greedy Decoding*** ($T=0.0, Top\text{-}K=1, Top\text{-}P=1.0, \text{seed}=42$, penalizaciones `0.0`).
+
+---
+
+## 2. Resultados Experimentales (`EXP-01` al `EXP-09`)
+
+| Condición Metodológica | Experimentos | $\Sigma TP$ | $\Sigma FP$ | $\Sigma FN$ | Precision | Recall | $F_1$-Score | Compilación DDL | Alucinación FK | Iteraciones |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Nivel 2A: LLM Crudo (Zero-Shot)** | `EXP-01, 04, 07` | 13 | 6 | 15 | 68.42% | 46.43% | **55.32%** | **0.0%** (0/3) | **43.75%** (7/16) | 1.00 |
+| **Nivel 2B: CoT Estático sin MCP** | `EXP-02, 05, 08` | 28 | 0 | 0 | 100.0% | 100.0% | **100.0%** | **0.0%** (0/3) | **0.00%** (0/16) | 1.00 |
+| **Nivel 3: Agente MCP + Dry-Run** | `EXP-03, 06, 09` | **28** | **0** | **0** | **100.0%** | **100.0%** | **100.0%** | **100.0%** (3/3) | **0.00%** (0/16) | **1.67** |
+
+* **Hallazgo Clave (Paradoja del CoT sin Herramientas):** El CoT estático alcanza $100\%$ de $F_1$ conceptual en papel, pero falla en el $100\%$ de ejecuciones reales en PostgreSQL por excepción `23503` (*foreign_key_violation*) ante huérfanos preexistentes (`film_id = 999`, `'ZZZZZ'`, `pedido_id = 999`). El Agente Nivel 3 detecta estos fallos en *Dry-Run*, añade saneamiento transaccional previo y compila al **100%**.
+
+---
+
+## 3. Reproducción en PostgreSQL 16 (Docker)
 
 ```bash
-# 1. Levantar contenedor de PostgreSQL 16
+# 1. Levantar bases defectuosas en PostgreSQL 16
 docker compose up -d
 
-# Credenciales por defecto:
-# Host: 127.0.0.1 | Puerto: 5432 | Usuario: postgres | Contraseña: postgres
-```
+# 2. Validar individualmente un DDL con Dry-Run (BEGIN ... ROLLBACK)
+python tools/dry_run_validator.py --db pagila_defective --file case1_pagila/resultados_experimentos_m4/exp03_ddl_agent_optimized.sql
 
-Las 6 bases de datos quedan creadas automáticamente:
-- `pagila_defective` & `pagila_ground_truth`
-- `northwind_defective` & `northwind_ground_truth`
-- `synthetic_defective` & `synthetic_ground_truth`
-
-*(Opcional: Si cuentas con una instancia local propia de PostgreSQL, ejecuta:)*
-```bash
-PGHOST=127.0.0.1 PGUSER=postgres PGPASSWORD=postgres bash scripts/setup_databases.sh
+# 3. Ejecutar la suite completa EXP-01 a EXP-09
+python tools/run_benchmark_suite.py
 ```
 
 ---
 
-## 3. Guía Operativa para el Miembro 3 (Auditor de Calidad & Linters)
-
-### 3.1. Objetivo Metodológico
-El Miembro 3 debe instrumentar el **Nivel 1 del Experimento (Grupo de Control)**: evaluar cómo responden los linters estáticos tradicionales basados en AST (SQLFluff y SonarQube) frente a los esquemas relacionales defectuosos.
-
-> **Hipótesis a Demostrar ($H_1$):**  
-> *Los linters estáticos basados en gramáticas sintácticas presentan un **100% de falsos negativos** ante defectos semánticos relacionales (1FN, 2FN, 3FN y ausencia de FKs), certificando como "código limpio" esquemas con anomalías graves.*
-
-### 3.2. Archivos de Trabajo para M3
-- **Esquemas a Auditar:**
-  - `case1_pagila/schema_defective.sql`
-  - `case2_northwind/schema_defective.sql`
-  - `case3_synthetic/schema_defective.sql`
-- **Verdad de Terreno (Ground Truth para contrastar):**
-  - `case1_pagila/defects_manifest.json` (10 defectos esperados)
-  - `case2_northwind/defects_manifest.json` (10 defectos esperados)
-  - `case3_synthetic/defects_manifest.json` (8 defectos esperados)
-
-### 3.3. Instrucciones de Ejecución con SQLFluff
-
-1. **Instalación de SQLFluff:**
-   ```bash
-   pip install sqlfluff
-   # O ejecutar dinámicamente con uv: uvx sqlfluff ...
-   ```
-
-2. **Ejecución sobre los Casos de Estudio (Dialecto PostgreSQL obligatorio):**
-   ```bash
-   # Auditar el Caso Sintético:
-   sqlfluff lint case3_synthetic/schema_defective.sql --dialect postgres
-
-   # Auditar todos los esquemas defectuosos en una sola ejecución:
-   sqlfluff lint case1_pagila/schema_defective.sql case2_northwind/schema_defective.sql case3_synthetic/schema_defective.sql --dialect postgres
-   ```
-
-3. **Exportación Estructurada (JSON) para la Matriz del Paper:**
-   ```bash
-   sqlfluff lint case3_synthetic/schema_defective.sql --dialect postgres --format json > m3_sqlfluff_synthetic.json
-   ```
-
-### 3.4. Cómo Interpretar y Reportar los Hallazgos
-- Observarás que SQLFluff **no arroja ningún error de parseo (Parse Errors = 0)** y **ninguna regla de smell relacional**.
-- Las únicas advertencias reportadas son cosméticas de layout:
-  - `LT01` (Trailing whitespace en comentarios y líneas vacías).
-  - `LT05` (Line is too long > 80 caracteres en comentarios DDL).
-- **Elaboración de la Matriz de Confusión para la Sección IV-A del Paper:**
-  - $\text{Verdaderos Positivos (TP)} = 0$ (no detectó ninguna 1FN, 2FN, 3FN ni falta de FK).
-  - $\text{Falsos Negativos (FN)} = 28$ (los 28 defectos documentados en los manifiestos pasaron inadvertidos).
-  - $\text{Tasa de Detección de Smells Relacionales} = 0\%$.
-  - $\text{Tasa de Falsos Negativos} = 100\%$.
-- **Justificación Teórica:** El AST valida únicamente que los tokens cumplan la gramática BNF de PostgreSQL (`CREATE TABLE`, tipos válidos), pero no tiene visibilidad sobre las dependencias funcionales entre atributos ($X \rightarrow Y$) ni sobre la ausencia de restricciones de integridad referencial.
-
----
-
-## 4. Guía Operativa para el Miembro 4 (Ingeniero de Prompts & Agentic AI)
-
-### 4.1. Objetivo Metodológico
-El Miembro 4 debe ejecutar y contrastar el **Nivel 2 (LLM Crudo / Zero-Shot)** contra el **Nivel 3 (Agente Autónomo con PostgreSQL MCP Server + Dry-Run determinista)**.
-
-> **Hipótesis a Demostrar ($H_2$ y $H_3$):**  
-> *Los prompts Zero-Shot / CoT en chatbots crudos sufren de alucinaciones de claves foráneas y generan DDL inválido (~40% de fallos sintácticos). En contraste, un Agente dotado de MCP Server y validación Dry-Run (`BEGIN...ROLLBACK`) alcanza un 0% de alucinaciones y 100% de DDL ejecutable.*
-
-### 4.2. Insumos para M4
-1. **Bases de Datos Defectuosas en Vivo:**
-   - Cadena de conexión (DSN) para el MCP Server:
-     - `postgresql://postgres:postgres@localhost:5432/synthetic_defective`
-     - `postgresql://postgres:postgres@localhost:5432/northwind_defective`
-     - `postgresql://postgres:postgres@localhost:5432/pagila_defective`
-2. **Datos Semilla con Anomalías Deliberadas:**
-   - Los datos en `seed_defective.sql` contienen anomalías reales (listas CSV, registros huérfanos, inconsistencias de duplicación) diseñadas para que las consultas de muestreo (`SELECT ... LIMIT 5`) del agente revelen los defectos.
-3. **Estándar de Oro (Ground Truth Oculto para Benchmark):**
-   - `case*/schema_ground_truth.sql` (DDL corregido canónico).
-   - `case*/defects_manifest.json` (lista formal de IDs de defectos: `D1-01`, `D2-01`, etc.).
-   - `known_native_smells` en los manifiestos: lista de dependencias menores nativas de Sakila/Northwind para **no penalizar al LLM como falso positivo** si las detecta.
-
-### 4.3. Protocolo de Ejecución del Agente en 4 Fases (Skill / CoT)
-
-El Miembro 4 debe configurar su agente (e.g. en Antigravity o LangChain) para seguir rigurosamente este flujo:
-
-```mermaid
-flowchart LR
-    Fase1["Fase 1:<br/>Introspección Dinámica<br/>(information_schema & LIMIT 5)"] --> Fase2["Fase 2:<br/>Auditoría Relacional<br/>(Taxonomía 1FN-3FN + FK)"]
-    Fase2 --> Fase3["Fase 3:<br/>Generación de DDL<br/>(schema_optimized.sql)"]
-    Fase3 --> Fase4["Fase 4:<br/>Validación Dry-Run<br/>(BEGIN ... ROLLBACK)"]
-```
-
-1. **Fase 1 (Introspección):**
-   - El agente ejecuta herramientas del MCP Server:
-     ```sql
-     -- Inspección de catálogo
-     SELECT table_name, column_name, data_type 
-     FROM information_schema.columns 
-     WHERE table_schema = 'public';
-
-     -- Muestreo de datos reales para detectar CSV o inconsistencias
-     SELECT * FROM clientes LIMIT 5;
-     ```
-2. **Fase 2 (Auditoría Relacional):**
-   - El agente clasifica los hallazgos en la taxonomía acordada (1FN, 2FN, 3FN, Keyless Entry).
-3. **Fase 3 (Generación de DDL Optimizado):**
-   - El agente produce el script DDL de refactorización (`schema_optimized.sql`) con creación de tablas intermedias, eliminación de columnas desnormalizadas y agregación formal de restricciones `FOREIGN KEY` con sus respectivas acciones referenciales (`ON DELETE RESTRICT` o `CASCADE`).
-4. **Fase 4 (Validación Dry-Run Determinista):**
-   - El agente **debe probar su propio DDL** dentro de una transacción atómica protegida contra la base de datos de pruebas:
-     ```sql
-     BEGIN;
-     -- Ejecutar DDL generado por el agente
-     ROLLBACK;
-     ```
-   - Si PostgreSQL arroja un error (e.g., violación de clave foránea preexistente, tabla inexistente, error de sintaxis), el agente captura el mensaje de error de PostgreSQL y corrige el DDL iterativamente antes de emitir la versión final.
-
-### 4.4. Métricas a Calcular para la Sección IV-B del Paper
-Para contrastar el Nivel 2 (LLM crudo) vs el Nivel 3 (Agente MCP):
-- **Precision:** $\frac{TP}{TP + FP}$
-- **Recall:** $\frac{TP}{TP + FN}$
-- **F1-Score:** $2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}$
-- **Tasa de Compilación Exitosa del DDL (%):** Porcentaje de scripts que ejecutan sin error en PostgreSQL.
-- **Tasa de Alucinación de FKs (%):** Claves foráneas inventadas hacia columnas que no existen en el catálogo.
-
----
-
-## 5. Guía Operativa para el Miembro 5 (Métricas de Calidad Backend & Coordinador)
-
-### 5.1. Pruebas de Contrato
-Ambos backends (`backend_defensive` y `backend_normalized`) comparten el mismo contrato de endpoints (`/clientes`, `/inventario`, `/pedidos`). Para verificar que ambos responden idénticamente a la suite de pruebas:
-
-```bash
-# Instalar dependencias
-pip install -r backend_defensive/requirements.txt pytest httpx radon
-
-# Ejecutar pruebas contra backend defensivo
-BACKEND_DIR=backend_defensive pytest
-
-# Ejecutar pruebas contra backend normalizado
-BACKEND_DIR=backend_normalized pytest
-```
-
-### 5.2. Medición Automatizada de Complejidad Ciclomática y SLOC
-Para auditar la reducción de complejidad entre el código defensivo y el código limpio normalizado:
-
-```bash
-# Herramienta rápida del benchmark:
-python tools/measure_defensive.py
-
-# O el script formal de instrumentación del Miembro 5:
-python ../../Proyecto/03-Metodologia/scripts/measure_quality.py \
-  --compare \
-  backend_defensive/routers/ \
-  backend_normalized/routers/
-```
-
-Métricas obtenidas:
-- **Reducción de Complejidad Ciclomática ($\Delta CC$):** Disminución superior al $40\%$ en endpoints críticos (`crear_cliente`, `crear_pedido`).
-- **Líneas de Código Defensivo ($SLOC_{def}$):** ~90 líneas eliminadas (parsing manual, validaciones en memoria).
-- **Consultas Previas Eliminadas ($Q_{prev}$):** Eliminación del 100% de `SELECT COUNT(*)` de verificación previa.
-- **Mitigación de TOCTOU:** Eliminación de la ventana de condición de carrera (*Time-of-Check to Time-of-Use*) delegando la atomicidad en los constraints `UNIQUE` y `FOREIGN KEY` de PostgreSQL.
-
----
-
-## 6. Estructura del Repositorio
+## 4. Estructura Específica Añadida en la Rama
 
 ```text
-ENTREGABLES/ProyectoCalidadDeSoftware/
-├── README.md                      # [ESTE ARCHIVO] Guía unificada para M2, M3, M4 y M5
-├── Ficha_Tecnica_Benchmark.md     # Especificación exhaustiva de los 28 defectos y tablas
-├── docker-compose.yml             # Despliegue inmediato de PostgreSQL 16 con las 6 BDs
-├── docker/
-│   └── init.sh                    # Script de inicialización automática del contenedor
-├── scripts/
-│   └── setup_databases.sh         # Carga idempotente de esquemas y semillas
-├── case1_pagila/                  # Caso 1: Pagila OLTP (15 -> 16 tablas)
-│   ├── schema_defective.sql       # DDL con 10 defectos relacionales inyectados
-│   ├── schema_ground_truth.sql    # DDL canónico normalizado
-│   ├── seed_defective.sql         # Datos semilla con anomalías deliberadas
-│   ├── seed_ground_truth.sql      # Datos semilla canónicos
-│   └── defects_manifest.json      # Manifiesto JSON para cálculo de Precision/Recall
-├── case2_northwind/               # Caso 2: Northwind (14 -> 15 tablas)
-│   ├── schema_defective.sql       # DDL con 10 defectos relacionales inyectados
-│   ├── schema_ground_truth.sql    # DDL canónico normalizado
-│   ├── seed_defective.sql         # Datos semilla con anomalías deliberadas
-│   ├── seed_ground_truth.sql      # Datos semilla canónicos
-│   └── defects_manifest.json      # Manifiesto JSON para cálculo de Precision/Recall
-├── case3_synthetic/               # Caso 3: Micro-benchmark Sintético DNBench (5 -> 7 tablas)
-│   ├── schema_defective.sql       # DDL con 8 defectos relacionales inyectados
-│   ├── schema_ground_truth.sql    # DDL canónico normalizado
-│   ├── seed_defective.sql         # Datos semilla con anomalías deliberadas
-│   ├── seed_ground_truth.sql      # Datos semilla canónicos
-│   └── defects_manifest.json      # Manifiesto JSON para cálculo de Precision/Recall
-├── backend_defensive/             # FastAPI asíncrono con validación manual defensiva
-│   ├── app/                       # Código fuente (routers, modelos, db)
-│   └── requirements.txt
-├── backend_normalized/            # FastAPI asíncrono limpio apoyado en BD normalizada
-│   ├── app/                       # Código fuente idéntico en contrato API
-│   └── requirements.txt
-├── tests/
-│   └── test_contract.py           # 10 pruebas funcionales de contrato agnósticas
-└── tools/
-    ├── generate_seeds.py          # Generador determinista de seeds (no tocar los .sql a mano)
-    ├── validate_benchmark.py      # Verificador de presencia/ausencia de defectos en BD
-    └── measure_defensive.py       # Script rápido de medición de CC con Radon
+├── README.md                                  # Documentación específica de esta rama
+├── config/
+│   ├── inference_config.json                  # Greedy Decoding determinista (seed=42)
+│   └── mcp_postgres.json                      # Configuración @modelcontextprotocol/server-postgres
+├── skills/postgres-schema-auditor/SKILL.md    # Especificación procedimental CoT del agente
+├── tools/
+│   ├── introspect_db.py                       # Introspección information_schema + LIMIT 5
+│   ├── dry_run_validator.py                   # Validador transaccional BEGIN...ROLLBACK (psycopg)
+│   └── run_benchmark_suite.py                 # Suite maestra EXP-01..EXP-09
+├── case*/resultados_experimentos_m4/          # 9 scripts DDL generados (exp01..exp09.sql)
+└── docs/resultados_experimentos_m4.md         # Informe completo, matrices y logs de ejecución
 ```
-
----
-
-## 7. Preguntas Frecuentes y Resolución de Problemas (FAQ)
-
-1. **¿Por qué Northwind tiene 14 tablas en lugar de las 13 mencionadas inicialmente?**  
-   El dialecto original de `northwind_psql` incluye la tabla auxiliar `us_states`. Se conservaron las 14 tablas originales en el esquema defectuoso para mantener la fidelidad del benchmark canónico.
-
-2. **¿Por qué Pagila no incluye particiones de `payment` ni `pgvector`?**  
-   Se aisló el núcleo OLTP para que el DDL compile de forma limpia e idéntica en cualquier distribución de PostgreSQL 15, 16 o 17 estándar, sin requerir extensiones externas compiladas en C.
-
-3. **¿Cómo resetear las bases de datos a su estado limpio inicial?**  
-   ```bash
-   docker compose down -v
-   docker compose up -d
-   ```
-
-4. **Si necesito regenerar o cambiar el volumen de datos de prueba:**  
-   Modifica los parámetros en `tools/generate_seeds.py` y vuelve a ejecutarlo. Nunca edites a mano los archivos `seed_*.sql` para evitar romper las restricciones de llaves foráneas.
