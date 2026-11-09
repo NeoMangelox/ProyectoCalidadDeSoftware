@@ -1,0 +1,44 @@
+[
+  {
+    "function": "crear_pedido",
+    "cc_def": 10,
+    "cc_norm": 1,
+    "delta_cc_pct": 90.0,
+    "rank_def": "B (Riesgo Bajo-Medio)",
+    "rank_norm": "A (Bajo Riesgo)",
+    "sloc_def_lines": 4,
+    "norm_def_lines": 0,
+    "delta_sloc_def_pct": 100.0,
+    "q_prev_def": 2,
+    "q_prev_norm": 0,
+    "delta_q_pct": 100.0
+  },
+  {
+    "function": "actualizar_cliente",
+    "cc_def": 7,
+    "cc_norm": 1,
+    "delta_cc_pct": 85.7,
+    "rank_def": "B (Riesgo Bajo-Medio)",
+    "rank_norm": "A (Bajo Riesgo)",
+    "sloc_def_lines": 2,
+    "norm_def_lines": 0,
+    "delta_sloc_def_pct": 100.0,
+    "q_prev_def": 2,
+    "q_prev_norm": 0,
+    "delta_q_pct": 100.0
+  },
+  {
+    "function": "crear_alquiler_async",
+    "cc_def": 10,
+    "cc_norm": 1,
+    "delta_cc_pct": 90.0,
+    "rank_def": "B (Riesgo Bajo-Medio)",
+    "rank_norm": "A (Bajo Riesgo)",
+    "sloc_def_lines": 3,
+    "norm_def_lines": 0,
+    "delta_sloc_def_pct": 100.0,
+    "q_prev_def": 2,
+    "q_prev_norm": 0,
+    "delta_q_pct": 100.0
+  }
+]
