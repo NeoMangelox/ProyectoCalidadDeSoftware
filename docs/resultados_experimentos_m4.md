@@ -277,20 +277,21 @@ flowchart LR
    - Se confirma ausencia de restricciones `FOREIGN KEY` en `inventory` (`film_id`, `store_id`), `rental` (`inventory_id`, `customer_id`) y `payment` (`rental_id`).
 2. **Muestreo Semantico (`SELECT ... LIMIT 5`):**  
    - `SELECT film_id, special_features FROM film LIMIT 5;` -> Evidencia: `'Trailers,Deleted Scenes'` (Violacion 1FN).  
-   - `SELECT film_id, actor_id, actor_name, film_title FROM film_actor LIMIT 5;` -> Evidencia: Atributos transitivos redundantes de actor y pelicula en la tabla pivote (Violacion 2FN).  
-   - `SELECT payment_id, customer_email, customer_full_name FROM payment LIMIT 5;` -> Evidencia: Atributos transitivos del cliente en pagos (Violacion 3FN).  
-   - `SELECT customer_id, address, activebool FROM customer LIMIT 5;` -> Evidencia: Direccion desnormalizada embebida en cliente (Violacion 3FN).
+   - `SELECT actor_id, film_id, actor_full_name FROM film_actor LIMIT 5;` -> Evidencia: `actor_full_name` redundante en tabla puente (Violacion 2FN).  
+   - `SELECT film_id, category_id, category_name FROM film_category LIMIT 5;` -> Evidencia: `category_name` redundante en tabla puente (Violacion 2FN).  
+   - `SELECT inventory_id, film_id, film_title FROM inventory LIMIT 5;` -> Evidencia: `film_title` dependiente de `film_id` (Violacion 3FN).  
+   - `SELECT address_id, city_id, city_name FROM address LIMIT 5;` -> Evidencia: `city_name` dependiente de `city_id` (Violacion 3FN).
 3. **Deteccion Preventiva de Huerfanos:**  
-   - Consulta ejecutada: `SELECT count(*) FROM inventory WHERE film_id NOT IN (SELECT film_id FROM film);` -> Retorna: `1` fila huérfana (`film_id = 999`).
+   - Consulta ejecutada: `SELECT count(*) FROM inventory WHERE film_id NOT IN (SELECT film_id FROM film);` -> Retorna: `1` fila huerfana (`film_id = 999`).
 
 #### Fase 2: Auditoria Relacional (1FN, 2FN, 3FN y FKs)
-* **1FN (Multivaluados):** Defecto `D1-01` en `film.special_features`. Requiere creacion de tabla `film_special_feature` vinculada con PK compuesta `(film_id, feature)`.
+* **1FN (Multivaluados):** Defecto `D1-01` en `film.special_features`. Requiere creacion de tabla `film_special_feature` con PK compuesta `(film_id, feature)`.
 * **2FN (Dependencias Parciales):**  
-  - Defecto `D2-01` en `film_actor`: `actor_name` depende unicamente de `actor_id`.  
+  - Defecto `D2-01` en `film_actor`: `actor_full_name` depende unicamente de `actor_id`.  
   - Defecto `D2-02` en `film_category`: `category_name` depende unicamente de `category_id`.
 * **3FN (Dependencias Transitivas):**  
-  - Defecto `D3-01` en `payment`: `customer_email` y `customer_full_name` dependen transitivamente de `customer_id`.  
-  - Defecto `D3-02` en `customer`: Atributo `address` debe desacoplarse hacia `address_id`.
+  - Defecto `D3-01` en `inventory`: `film_title` depende transitivamente de `film_id`.  
+  - Defecto `D3-02` en `address`: `city_name` depende transitivamente de `city_id`.
 * **Omision de Integridad Referencial (Keyless):**  
   - Defectos `D4-01` (`inventory.film_id`), `D4-02` (`inventory.store_id`), `D4-03` (`rental.inventory_id`), `D4-04` (`rental.customer_id`), `D4-05` (`payment.rental_id`).
 
@@ -299,28 +300,31 @@ Se genera el script DDL incorporando:
 1. Creacion de la tabla normalizada `film_special_feature`:
    ```sql
    CREATE TABLE IF NOT EXISTS film_special_feature (
-       film_id integer NOT NULL,
-       feature text NOT NULL,
-       CONSTRAINT pk_film_special_feature PRIMARY KEY (film_id, feature),
-       CONSTRAINT fk_film_special_feature_film FOREIGN KEY (film_id) 
-           REFERENCES film(film_id) ON DELETE CASCADE
+       film_id   INTEGER NOT NULL REFERENCES film (film_id) ON DELETE CASCADE,
+       feature   TEXT NOT NULL,
+       CONSTRAINT pk_film_special_feature PRIMARY KEY (film_id, feature)
    );
    ```
-2. Migracion de listas CSV a registros atomicos con `unnest` y `string_to_array`.
-3. Eliminacion de columnas desnormalizadas mediante `ALTER TABLE ... DROP COLUMN`.
-4. Clausula de saneamiento previo de huerfanos antes de la inyeccion de FK:
+2. Migracion atomica con `unnest(string_to_array(special_features, ','))` y `DROP COLUMN special_features`.
+3. Eliminacion de dependencias parciales y transitivas:
    ```sql
+   ALTER TABLE film_actor DROP COLUMN IF EXISTS actor_full_name;
+   ALTER TABLE film_category DROP COLUMN IF EXISTS category_name;
+   ALTER TABLE inventory DROP COLUMN IF EXISTS film_title;
+   ALTER TABLE address DROP COLUMN IF EXISTS city_name;
+   ```
+4. Saneamiento preventivo de huerfanos detectados en Fase 1 antes de inyectar FKs:
+   ```sql
+   DELETE FROM payment WHERE rental_id NOT IN (SELECT rental_id FROM rental);
+   DELETE FROM rental WHERE inventory_id NOT IN (SELECT inventory_id FROM inventory) 
+                         OR customer_id NOT IN (SELECT customer_id FROM customer);
    DELETE FROM inventory WHERE film_id NOT IN (SELECT film_id FROM film);
    ```
-5. Inyeccion formal de las 5 claves foraneas con clausulas `ON DELETE RESTRICT` y `ON DELETE CASCADE`.
+5. Inyeccion formal de las 5 restricciones `FOREIGN KEY` con clausulas `ON DELETE RESTRICT`.
 
 #### Fase 4: Validacion Determinista Dry-Run
-* **Iteracion 1:**  
-  - *Resultado:* Fallo en la transaccion de prueba por violacion de integridad `23503: foreign_key_violation` en `inventory` (`Key (film_id)=(999) is not present in table "film"`).  
-  - *Diagnostico del Agente:* Deteccion de registro huerfano deliberado inyectado en el seed.  
-  - *Correccion Aplicada:* Inyeccion de `DELETE FROM inventory WHERE film_id NOT IN (SELECT film_id FROM film);` previa a la creacion del constraint `fk_inventory_film`.
-* **Iteracion 2:**  
-  - *Resultado:* **Validacion EXITOSA: El DDL compila al 100% en PostgreSQL sin alucinaciones.**
+* **Iteracion 1:** Fallo `23503: foreign_key_violation` en `inventory` (`Key (film_id)=(999) is not present in table "film"`).  
+* **Iteracion 2:** **Validacion EXITOSA: El DDL compila al 100% en PostgreSQL sin alucinaciones tras aplicar la purga previa.**
 
 ---
 
@@ -341,37 +345,49 @@ flowchart LR
 #### Fase 1: Introspeccion MCP
 1. **Inspeccion de Catalogo:** Se auditan las 14 tablas de Northwind (`categories`, `customers`, `employees`, `employee_territories`, `order_details`, `orders`, `products`, `region`, `shippers`, `suppliers`, `territories`, `customer_demographics`, `customer_customer_demo`).
 2. **Muestreo Semantico (`LIMIT 5`):**  
-   - `SELECT order_id, product_id, product_name, unit_price FROM order_details LIMIT 5;` -> Evidencia de dependencias parciales (`product_name` depende de `product_id`).  
-   - `SELECT order_id, customer_id, customer_name, customer_city FROM orders LIMIT 5;` -> Evidencia de transitividad (`customer_city` y `customer_name` dependen de `customer_id`).  
-   - `SELECT territory_id, territory_description, region_description FROM territories LIMIT 5;` -> Evidencia de violacion 3FN de region.
+   - `SELECT customer_id, phones FROM customers LIMIT 5;` -> Evidencia: Telefonos separados por coma (Violacion 1FN).  
+   - `SELECT order_id, product_id, product_name, quantity_per_unit FROM order_details LIMIT 5;` -> Evidencia: `product_name` y `quantity_per_unit` dependen de `product_id` (Violacion 2FN).  
+   - `SELECT order_id, ship_via, shipper_name FROM orders LIMIT 5;` -> Evidencia: `shipper_name` depende de `ship_via` (Violacion 3FN).
 3. **Deteccion de Huerfanos:**  
-   - `SELECT count(*) FROM orders WHERE customer_id NOT IN (SELECT customer_id FROM customers);` -> Retorna: `1` fila huérfana (`customer_id = 'ZZZZZ'`).
+   - `SELECT count(*) FROM orders WHERE customer_id NOT IN (SELECT customer_id FROM customers);` -> Retorna: `1` fila huerfana (`customer_id = 'ZZZZZ'`).
 
 #### Fase 2: Auditoria Relacional (1FN, 2FN, 3FN y FKs)
-* **1FN:** Defecto `D1-01` en `suppliers.contact_phones` (telefonos multiples separados por coma). Requiere creacion de tabla hija `supplier_phones`.
+* **1FN:** Defecto `D1-01` en `customers.phones`. Requiere creacion de tabla `customer_phones(customer_id, phone)`.
 * **2FN:**  
-  - Defecto `D2-01` en `order_details`: `product_name` redundante en relacion M:N.  
-  - Defecto `D2-02` en `employee_territories`: `territory_description` redundante en relacion M:N.
+  - Defecto `D2-01` en `order_details`: `product_name` depende unicamente de `product_id`.  
+  - Defecto `D2-02` en `order_details`: `quantity_per_unit` depende unicamente de `product_id`.
 * **3FN:**  
-  - Defecto `D3-01` en `orders`: `customer_name` y `customer_city` transitivos.
+  - Defecto `D3-01` en `orders`: `shipper_name` depende transitivamente de `ship_via`.
 * **Keyless Entry:**  
-  - Defectos `D4-01` (`orders.customer_id`), `D4-02` (`orders.employee_id`), `D4-03` (`order_details.order_id`), `D4-04` (`order_details.product_id`), `D4-05` (`products.supplier_id`), `D4-06` (`products.category_id`).
+  - Defectos `D4-01` (`orders.customer_id`), `D4-02` (`orders.ship_via`), `D4-03` (`order_details.order_id`), `D4-04` (`order_details.product_id`), `D4-05` (`products.category_id`), `D4-06` (`products.supplier_id`).
 
 #### Fase 3: Generacion de DDL Correctivo
-1. Creacion de `supplier_phones` con normalizacion 1FN y migracion de tuplas.
-2. Eliminacion de columnas desnormalizadas redundantes.
-3. Clausula obligatoria de purga de huerfanos:
+1. Creacion de `customer_phones` y migracion con `unnest(string_to_array(phones, ','))`:
    ```sql
-   DELETE FROM order_details WHERE order_id IN (
-       SELECT order_id FROM orders WHERE customer_id NOT IN (SELECT customer_id FROM customers)
+   CREATE TABLE IF NOT EXISTS customer_phones (
+       customer_id  VARCHAR(5) NOT NULL REFERENCES customers (customer_id) ON DELETE CASCADE,
+       phone        VARCHAR(30) NOT NULL,
+       CONSTRAINT pk_customer_phones PRIMARY KEY (customer_id, phone)
    );
-   DELETE FROM orders WHERE customer_id NOT IN (SELECT customer_id FROM customers);
    ```
-4. Adicion de restricciones `FOREIGN KEY` con nombres canonicos.
+2. Eliminacion de columnas desnormalizadas:
+   ```sql
+   ALTER TABLE customers DROP COLUMN IF EXISTS phones;
+   ALTER TABLE order_details DROP COLUMN IF EXISTS product_name;
+   ALTER TABLE order_details DROP COLUMN IF EXISTS quantity_per_unit;
+   ALTER TABLE orders DROP COLUMN IF EXISTS shipper_name;
+   ```
+3. Purga transaccional obligatoria de tuplas huerfanas:
+   ```sql
+   DELETE FROM order_details WHERE product_id NOT IN (SELECT product_id FROM products);
+   DELETE FROM orders WHERE customer_id NOT IN (SELECT customer_id FROM customers)
+                         OR (ship_via IS NOT NULL AND ship_via NOT IN (SELECT shipper_id FROM shippers));
+   ```
+4. Adicion de restricciones `FOREIGN KEY` formales en `orders`, `order_details` y `products`.
 
 #### Fase 4: Validacion Determinista Dry-Run
 * **Iteracion 1:** Fallo `23503` en `orders` (`Key (customer_id)=(ZZZZZ) is not present in table "customers"`).
-* **Iteracion 2:** **Validacion EXITOSA: El DDL compila al 100% en PostgreSQL sin alucinaciones.**
+* **Iteracion 2:** **Validacion EXITOSA: El DDL compila al 100% en PostgreSQL sin alucinaciones tras depurar el huerfano.**
 
 ---
 
@@ -388,30 +404,50 @@ flowchart LR
 ```
 
 #### Fase 1: Introspeccion MCP
-1. **Inspeccion de Catalogo:** Se auditan las 5 tablas de control (`clientes`, `pedidos`, `productos`, `detalle_pedidos`, `envios`).
+1. **Inspeccion de Catalogo:** Se auditan las 5 tablas base (`clientes`, `pedidos`, `productos`, `detalle_pedido`, `envios`).
 2. **Muestreo Semantico:**  
-   - `SELECT cliente_id, telefonos FROM clientes LIMIT 5;` -> Lista CSV de telefonos (1FN).  
-   - `SELECT pedido_id, producto_id, descripcion_producto, precio_unitario FROM detalle_pedidos LIMIT 5;` -> Dependencia parcial de `producto_id` (2FN).  
-   - `SELECT envio_id, codigo_postal, ciudad, provincia FROM envios LIMIT 5;` -> Dependencia transitiva `codigo_postal -> (ciudad, provincia)` (3FN).  
-   - Ausencia total de constraints `FOREIGN KEY` (Keyless).
+   - `SELECT cliente_id, telefonos FROM clientes LIMIT 5;` -> Lista CSV de telefonos (Violacion 1FN).  
+   - `SELECT pedido_id, producto_id, nombre_producto, categoria_producto FROM detalle_pedido LIMIT 5;` -> Atributos del producto en tabla detalle (Violacion 2FN).  
+   - `SELECT cliente_id, codigo_postal, ciudad FROM clientes LIMIT 5;` -> `ciudad` depende funcionalmente de `codigo_postal` (Violacion 3FN).
+3. **Deteccion de Huerfanos:**  
+   - `SELECT count(*) FROM envios WHERE pedido_id NOT IN (SELECT pedido_id FROM pedidos);` -> Retorna: `1` fila huerfana (`pedido_id = 999`).
 
 #### Fase 2: Auditoria Relacional
-* **1FN:** Defecto `D1-01` en `clientes.telefonos`. Requiere tabla `cliente_telefonos`.
-* **2FN:** Defectos `D2-01` (`descripcion_producto`) y `D2-02` (`nombre_cliente` redundante en pedidos).
-* **3FN:** Defecto `D3-01` en `envios`: Desacoplar `codigo_postal`, `ciudad` y `provincia` hacia una nueva entidad `codigos_postales`.
-* **Keyless Entry:** Defectos `D4-01` (`pedidos.cliente_id`), `D4-02` (`detalle_pedidos.pedido_id`), `D4-03` (`detalle_pedidos.producto_id`), `D4-04` (`envios.pedido_id`).
+* **1FN:** Defecto `D1-01` en `clientes.telefonos`. Requiere tabla hija `clientes_telefonos(cliente_id, telefono)`.
+* **2FN:** Defectos `D2-01` (`nombre_producto`) y `D2-02` (`categoria_producto`) en `detalle_pedido`.
+* **3FN:** Defecto `D3-01` en `clientes`: Desacoplar `codigo_postal` y `ciudad` creando entidad `codigos_postales(codigo_postal, ciudad)`.
+* **Keyless Entry:** Defectos `D4-01` (`pedidos.cliente_id`), `D4-02` (`detalle_pedido.pedido_id`), `D4-03` (`detalle_pedido.producto_id`), `D4-04` (`envios.pedido_id`).
 
 #### Fase 3: Generacion de DDL Correctivo
-1. Creacion y poblado proactivo de la tabla satelite `codigos_postales` mediante `INSERT ... SELECT DISTINCT codigo_postal, ciudad, provincia FROM envios;`.
-2. Normalizacion de telefonos en tabla independiente `cliente_telefonos`.
-3. Saneamiento previo del registro huerfano en envios:
+1. Creacion y poblado proactivo de la tabla normalizada `codigos_postales`:
+   ```sql
+   CREATE TABLE IF NOT EXISTS codigos_postales (
+       codigo_postal  VARCHAR(10) CONSTRAINT pk_codigos_postales PRIMARY KEY,
+       ciudad         VARCHAR(80) NOT NULL
+   );
+   INSERT INTO codigos_postales (codigo_postal, ciudad)
+   SELECT DISTINCT codigo_postal, initcap(trim(ciudad))
+   FROM clientes WHERE codigo_postal IS NOT NULL AND ciudad IS NOT NULL
+   ON CONFLICT (codigo_postal) DO NOTHING;
+   ```
+2. Normalizacion de telefonos en `clientes_telefonos` y eliminacion de dependencias parciales:
+   ```sql
+   ALTER TABLE detalle_pedido DROP COLUMN IF EXISTS nombre_producto;
+   ALTER TABLE detalle_pedido DROP COLUMN IF EXISTS categoria_producto;
+   ALTER TABLE clientes DROP COLUMN IF EXISTS ciudad;
+   ALTER TABLE clientes DROP COLUMN IF EXISTS telefonos;
+   ```
+3. Saneamiento preventivo de tuplas huerfanas:
    ```sql
    DELETE FROM envios WHERE pedido_id NOT IN (SELECT pedido_id FROM pedidos);
+   DELETE FROM detalle_pedido WHERE producto_id NOT IN (SELECT producto_id FROM productos)
+                                 OR pedido_id NOT IN (SELECT pedido_id FROM pedidos);
+   DELETE FROM pedidos WHERE cliente_id NOT IN (SELECT cliente_id FROM clientes);
    ```
-4. Inyectar restricciones foraneas con `CASCADE` en tablas transaccionales hijas.
+4. Creacion de restricciones `FOREIGN KEY` formales en cascada y restriccion.
 
 #### Fase 4: Validacion Determinista Dry-Run
-* **Iteracion 1:** **Validacion EXITOSA: El DDL compila al 100% en PostgreSQL sin alucinaciones (1 solo intento).**
+* **Iteracion 1:** **Validacion EXITOSA: El DDL compila al 100% en PostgreSQL en el primer intento sin alucinaciones, gracias a la sincronizacion proactiva de codigos_postales y purga de envios.**
 
 ---
 
