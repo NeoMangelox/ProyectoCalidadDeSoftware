@@ -1,65 +1,58 @@
-# Línea Base Industrial con Analizadores Estáticos AST (`linters-ast-baseline`)
+# Agente Autónomo MCP y Validación *Dry-Run* para PostgreSQL (`agente-mcp-normalizacion`)
 
-> **Alcance de la Rama:** Auditoría estática de control (Nivel 1) sobre los esquemas defectuosos de PostgreSQL 16 utilizando **SQLFluff 4.5.0** y **SonarQube Community Build 26.10 (`sonar-sql-plugin` 1.4.0)** para contrastar la pregunta $RQ_1$ y la hipótesis $H_1$.
+> **Alcance de la Rama:** Diseño experimental e infraestructura determinista para comparar estrategias de Inteligencia Artificial de **Nivel 2 (Zero-Shot y Chain-of-Thought estático)** frente a **Nivel 3 (Agente Autónomo con MCP Server, Skill procedimental y validación transaccional *Dry-Run*)** sobre 9 corridas (`EXP-01`–`EXP-09`), respondiendo $RQ_2$ y validando $H_2$.
 
 ---
 
 ## 1. Propósito Metodológico
 
-Esta rama implementa el **Grupo de Control Industrial** del experimento. Antes de evaluar arquitecturas basadas en LLMs, demuestra empíricamente que las herramientas tradicionales orientadas a Árboles de Sintaxis Abstracta (AST) en *pipelines* CI/CD operan bajo una **ceguera semántica** frente a defectos relacionales:
-- Verifican conformidad léxica, sintaxis gramatical (BNF de PostgreSQL) y formato estilístico.
-- No detectan atributos multivaluados (1FN), dependencias parciales (2FN), dependencias transitivas (3FN) ni omisión de claves foráneas (*keyless entry*).
+Cuando un LLM opera "a ciegas" sobre texto DDL crudo (*Zero-Shot* o *CoT* sin herramientas), desconoce nombres exactos del catálogo y la presencia de registros huérfanos o listas delimitadas en datos reales. Esta rama implementa una arquitectura agéntica determinista que acopla:
+1. **Introspección viva vía MCP (`@modelcontextprotocol/server-postgres`):** Inspección de `information_schema` y muestreo semántico real (`SELECT ... LIMIT 5`) mediante `tools/introspect_db.py`.
+2. **Skill Procedimental (`skills/postgres-schema-auditor/SKILL.md`):** Protocolo *Chain-of-Thought* en 5 pasos (Introspección $\to$ Muestreo 1FN $\to$ Inferencia de Dependencias $\to$ Clasificación Taxonómica $\to$ Emisión de DDL nativo PostgreSQL 16).
+3. **Bucle Cerrado *Dry-Run* (`tools/dry_run_validator.py`):** Ejecución real del DDL dentro de transacciones revertibles `BEGIN ... ROLLBACK` vía `psycopg`, capturando códigos `SQLSTATE` (`23503`, `42830`, `42703`) como retroalimentación determinista sin alterar el servidor.
+4. **Decodificación Reproducible (`config/inference_config.json`):** Modelo base **`gemini-3.8-flash`** (`reasoning_effort = high`) bajo ***Greedy Decoding*** ($T=0.0, Top\text{-}K=1, Top\text{-}P=1.0, \text{seed}=42$, penalizaciones `0.0`).
 
 ---
 
-## 2. Configuración Estandarizada y Certificación de Entradas
+## 2. Resultados Experimentales (`EXP-01` al `EXP-09`)
 
-- **Inmutabilidad de Esquemas (`m3/inputs.sha256.txt`):** Sellado SHA-256 de `case1_pagila/schema_defective.sql`, `case2_northwind/schema_defective.sql` y `case3_synthetic/schema_defective.sql`.
-- **SQLFluff (`4.5.0`):** Configurado en `.sqlfluff` con `dialect = postgres`, `templater = raw`, `max_line_length = 100` y las **79 reglas activas sin exclusiones** (`m3/requirements.txt`).
-- **SonarQube (`26.10.0.133078` + `sonar-sql-plugin 1.4.0`):** Configurado en `sonar-project.properties` (`sonar.sql.dialect = pssqlv2`, perfil `SQL rules` con `20` reglas activas, SonarScanner CLI `8.1.0.6389`).
+| Condición Metodológica | Experimentos | $\Sigma TP$ | $\Sigma FP$ | $\Sigma FN$ | Precision | Recall | $F_1$-Score | Compilación DDL | Alucinación FK | Iteraciones |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Nivel 2A: LLM Crudo (Zero-Shot)** | `EXP-01, 04, 07` | 13 | 6 | 15 | 68.42% | 46.43% | **55.32%** | **0.0%** (0/3) | **43.75%** (7/16) | 1.00 |
+| **Nivel 2B: CoT Estático sin MCP** | `EXP-02, 05, 08` | 28 | 0 | 0 | 100.0% | 100.0% | **100.0%** | **0.0%** (0/3) | **0.00%** (0/16) | 1.00 |
+| **Nivel 3: Agente MCP + Dry-Run** | `EXP-03, 06, 09` | **28** | **0** | **0** | **100.0%** | **100.0%** | **100.0%** | **100.0%** (3/3) | **0.00%** (0/16) | **1.67** |
 
----
-
-## 3. Evidencia Empírica y Controles Positivos
-
-| Caso Evaluado | Defectos Reales | SQLFluff (Estilo) | SQLFluff Relacional ($TP / FN$) | SonarQube (Incidencias) | SonarQube Relacional ($TP / FN$) | Quality Gate |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`case1_pagila`** | 10 | 189 (`CP03, CP05, LT01, LT02, RF04`) | **0 / 10** ($100\%$ FN) | 1 (`SQLCC:C030`) | **0 / 10** ($100\%$ FN) | **PASSED** |
-| **`case2_northwind`** | 10 | 96 (`LT01, RF04`) | **0 / 10** ($100\%$ FN) | 1 (`SQLCC:C030`) | **0 / 10** ($100\%$ FN) | **PASSED** |
-| **`case3_synthetic`** | 8 | 37 (`LT01, LT02`) | **0 / 8** ($100\%$ FN) | 1 (`SQLCC:C030`) | **0 / 8** ($100\%$ FN) | **PASSED** |
-| **Total Nivel 1** | **28** | **322 avisos de formato** | **0 / 28 ($100\%$ FN)** | **3 cabeceras** | **0 / 28 ($100\%$ FN)** | **100% Aprobados** |
-
-* **Controles Positivos Independientes:** [`m3/sqlfluff/control_style.sql`](m3/sqlfluff/control_style.sql) disparó `LT01` en SQLFluff, y [`m3/sonarqube/header_control.sql`](m3/sonarqube/header_control.sql) disparó `SQLCC:C030` en un proyecto aislado (`calidadsw-m3-header`), descartando fallos de configuración.
-* **Criterio Estricto de Puntuación (`m3/matriz_deteccion.csv`):** Coincidir físicamente en una línea con una alerta cosmética (`LT01`/`CP05`) **no** califica como detección semántica ($TP=0, FN=28$, precisión relacional indefinida).
+* **Hallazgo Clave (Paradoja del CoT sin Herramientas):** El CoT estático alcanza $100\%$ de $F_1$ conceptual en papel, pero falla en el $100\%$ de ejecuciones reales en PostgreSQL por excepción `23503` (*foreign_key_violation*) ante huérfanos preexistentes (`film_id = 999`, `'ZZZZZ'`, `pedido_id = 999`). El Agente Nivel 3 detecta estos fallos en *Dry-Run*, añade saneamiento transaccional previo y compila al **100%**.
 
 ---
 
-## 4. Reproducción Rápida
+## 3. Reproducción en PostgreSQL 16 (Docker)
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r m3\requirements.txt
-.\.venv\Scripts\sqlfluff.exe lint case1_pagila\schema_defective.sql --format json
-.\.venv\Scripts\sqlfluff.exe lint case2_northwind\schema_defective.sql --format json
-.\.venv\Scripts\sqlfluff.exe lint case3_synthetic\schema_defective.sql --format json
+```bash
+# 1. Levantar bases defectuosas en PostgreSQL 16
+docker compose up -d
+
+# 2. Validar individualmente un DDL con Dry-Run (BEGIN ... ROLLBACK)
+python tools/dry_run_validator.py --db pagila_defective --file case1_pagila/resultados_experimentos_m4/exp03_ddl_agent_optimized.sql
+
+# 3. Ejecutar la suite completa EXP-01 a EXP-09
+python tools/run_benchmark_suite.py
 ```
 
-Para las instrucciones completas de SonarQube en Docker y trazabilidad línea a línea, consultar [`m3/README.md`](m3/README.md) y [`m3/Analisis de Resultados.md`](<m3/Analisis de Resultados.md>).
-
 ---
 
-## 5. Estructura Específica Añadida en la Rama
+## 4. Estructura Específica Añadida en la Rama
 
 ```text
-├── README.md                            # Documentación específica de esta rama
-├── .sqlfluff                            # Configuración dialect=postgres (79 reglas activas)
-├── sonar-project.properties             # Configuración SonarScanner (pssqlv2)
-└── m3/
-    ├── README.md                        # Guía detallada de reproducción Nivel 1
-    ├── Analisis de Resultados.md        # Discusión formal y límites de interpretación
-    ├── inputs.sha256.txt                # Huellas SHA-256 de esquemas evaluados
-    ├── matriz_deteccion.csv             # Matriz de 28 filas mapeando TP/FN línea por línea
-    ├── requirements.txt                 # sqlfluff==4.5.0
-    ├── sqlfluff/                        # control_style.sql + resultados JSON
-    └── sonarqube/                       # header_control.sql, control_issues.json + evidencias
+├── README.md                                  # Documentación específica de esta rama
+├── config/
+│   ├── inference_config.json                  # Greedy Decoding determinista (seed=42)
+│   └── mcp_postgres.json                      # Configuración @modelcontextprotocol/server-postgres
+├── skills/postgres-schema-auditor/SKILL.md    # Especificación procedimental CoT del agente
+├── tools/
+│   ├── introspect_db.py                       # Introspección information_schema + LIMIT 5
+│   ├── dry_run_validator.py                   # Validador transaccional BEGIN...ROLLBACK (psycopg)
+│   └── run_benchmark_suite.py                 # Suite maestra EXP-01..EXP-09
+├── case*/resultados_experimentos_m4/          # 9 scripts DDL generados (exp01..exp09.sql)
+└── docs/resultados_experimentos_m4.md         # Informe completo, matrices y logs de ejecución
 ```
