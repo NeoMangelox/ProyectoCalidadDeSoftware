@@ -1,6 +1,6 @@
 # Resultados Empíricos de Calidad Backend ($\Delta CC$, $\Delta SLOC_{def}$, $\Delta Q_{prev}$)
 
-> **Instrumento:** [`measure_quality.py`](../measure_quality.py) sobre `backend_defensive/app/routers` vs. `backend_normalized/app/routers` (equivalencia certificada mediante 10 pruebas de contrato en `pytest`).  
+> **Instrumento:** [`measure_quality.py`](../measure_quality.py) sobre [`backend_defensive/app/routers`](../../02_benchmark_sql_backend/backend_defensive/app/routers) vs. [`backend_normalized/app/routers`](../../02_benchmark_sql_backend/backend_normalized/app/routers) (equivalencia certificada mediante 10 pruebas de contrato en `pytest`).  
 > **Artefactos JSON/MD:** [`metricas_m2_audit.json`](../results/metricas_m2_audit.json) · [`tabla_m2_audit.md`](../results/tabla_m2_audit.md)
 
 ---

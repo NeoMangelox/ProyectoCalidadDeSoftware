@@ -1,0 +1,28 @@
+# 📚 Repositorio Bibliográfico y Catálogo de Literatura Científica
+
+> **Archivo BibTeX Vinculado:** [`referencias.bib`](referencias.bib)  
+> **Documento SLR:** [`Revision_Sistematica_Literatura.md`](Revision_Sistematica_Literatura.md)
+
+---
+
+## 🏛️ Catálogo de Fuentes Canónicas (17 Referencias Verificadas)
+
+| Clave BibTeX | Referencia Formal | Tipo de Publicación | Aporte Principal al Paper | Secciones Vinculadas en el Repo |
+| :--- | :--- | :---: | :--- | :--- |
+| `codd1970relational` | Codd, E. F. (1970). *A Relational Model of Data for Large Shared Data Banks*. Comm. ACM. | ACM Journal | Teoría matemática de formas normales (1FN, 2FN, 3FN). | [Estado del Arte](Revision_Sistematica_Literatura.md) |
+| `mccabe1976complexity` | McCabe, T. J. (1976). *A Complexity Measure*. IEEE Trans. Softw. Eng. | IEEE Journal | Fundamento matemático de $V(G) = E - N + 2P$ y predicados $\pi$. | [Marco Métrico](../05_metricas_calidad_backend/docs/Marco_Metrico_y_Formalizacion.md) |
+| `nist_sp500_235` | Watson, A. H. & McCabe, T. J. (1996). *Structured Testing: A Testing Methodology Using the Cyclomatic Complexity Metric*. NIST. | Reporte NIST | Manual de referencia gubernamental sobre grafo de control y umbrales de complejidad. | [Marco Métrico](../05_metricas_calidad_backend/docs/Marco_Metrico_y_Formalizacion.md) |
+| `ambler2006refactoring` | Ambler, S. W. & Sadalage, P. J. (2006). *Refactoring Databases: Evolutionary Database Design*. Addison-Wesley. | Libro Técnico | Refactorización segura de esquemas, transición evolutiva y preservación de integridad. | [Paper Draft](../06_documentacion_paper/Borrador_Paper_Cientifico.md) |
+| `karwin2010sql` | Karwin, B. (2010). *SQL Antipatterns: Avoiding the Pitfalls of Database Programming*. Pragmatic Bookshelf. | Libro Técnico | Catálogo industrial de antipatrones relacionales (*Jaywalking*, *Keyless Entry*). | [Estado del Arte Original](Estado_del_Arte_Original.md) |
+| `iso25010_2011` | ISO/IEC 25010 (2011/2023). *Systems and software Quality Requirements and Evaluation (SQuaRE)*. ISO. | Estándar Internacional | Modelo de calidad: Mantenibilidad (Analizabilidad) y Fiabilidad (Tolerancia a fallos). | [Marco Métrico](../05_metricas_calidad_backend/docs/Marco_Metrico_y_Formalizacion.md) |
+| `sharma2018smelly` | Sharma, T. et al. (2018). *Smelly Relations: Measuring and Understanding Database Schema Quality*. ACM/IEEE ICSE-SEIP. | ACM/IEEE Conference | Catálogo de 13 database smells y prueba de que ORMs no los previenen. | [Estado del Arte](Revision_Sistematica_Literatura.md) |
+| `yu2018spider` | Yu, T. et al. (2018). *Spider: A Large-Scale Human-Labeled Dataset for Complex and Cross-Domain Semantic Parsing and Text-to-SQL Task*. EMNLP. | ACL Conference | Benchmark fundacional de Text-to-SQL multi-tabla asumiendo esquemas limpios. | [Estado del Arte](Revision_Sistematica_Literatura.md) |
+| `foidl2022data` | Foidl, H., Felderer, M., & Ramler, R. (2022). *Data Smells: Categories, Causes and Consequences*. IEEE/ACM CAIN. | ACM/IEEE Conference | Taxonomía de *Data Smells* en datos crudos que degradan sistemas de IA/software. | [Estado del Arte](Revision_Sistematica_Literatura.md) |
+| `wei2022chain` | Wei, J. et al. (2022). *Chain-of-Thought Prompting Elicits Reasoning in Large Language Models*. NeurIPS. | NeurIPS Conference | Base metodológica del razonamiento estructurado paso a paso (CoT). | [Estado del Arte](Revision_Sistematica_Literatura.md) |
+| `li2023bird` | Li, J. et al. (2023). *Can LLM Already Serve as A Database Interface? (BIRD)*. NeurIPS. | NeurIPS Conference | Demuestra fallos de LLMs ante datos sucios y la necesidad de *grounding* empírico. | [Estado del Arte](Revision_Sistematica_Literatura.md) |
+| `jo2025database` | Jo, E., Lee, N., & Kim, G. (2025). *Database Normalization via Dual-LLM Self-Refinement (Miffie)*. arXiv:2508.17693. | arXiv Preprint | Arquitecturas de refinamiento dual y generadores-verificadores para BD. | [Estado del Arte](Revision_Sistematica_Literatura.md) |
+| `miggiano2025automatic` | Miggiano, D. (2025). *Automatic Categorisation of SQL Errors (SQLMentor)*. Università di Genova (Tesis de Maestría). | Tesis MSc (UniGe) | Contraste entre reglas estáticas `sqlglot` AST y LLMs (`Gemini 2.5 Pro`, `GPT-4o-mini`). | [Estado del Arte Original](Estado_del_Arte_Original.md) |
+| `dnbench2026can` | Koh, D.-J., Kim, H., Yoon, S. et al. (2026). *Can LLMs Normalize Databases? (DNBench & MARS)*. arXiv:2609.11141. | arXiv Preprint | Benchmark de vanguardia (3,275 muestras) y caracterización de 3 fallos de normalización LLM. | [Estado del Arte Original](Estado_del_Arte_Original.md) |
+| `an2026dialect` | An, J., Mahathevan, K., & Rigger, M. (2026). *Dialect-Agnostic SQL Parsing via LLM-Based Segmentation (SQLFlex)*. PACMMOD / SIGMOD, DOI: `10.1145/3802038`. | ACM PACMMOD Journal | Hibridación parser ANTLR SQL-92 + segmentación `GPT-4.1`; expone límites gramaticales en SQLFluff. | [Estado del Arte Original](Estado_del_Arte_Original.md) |
+| `ramachandran2026normascore` | Ramachandran, R. et al. (2026). *NormaScore: Intelligent Database Normalization Assessment Framework for DBMS Education*. BDCC 10(10):343. | MDPI BDCC Journal | Combina `Qwen2.5-7B-Instruct` (SFT+GRPO) con algoritmos exactos de cierre y preservación en `NormaBench`. | [Estado del Arte Original](Estado_del_Arte_Original.md) |
+| `demedeiros2026llm` | de Medeiros, A. S. et al. (2026). *LLM-Driven SQL Remediation: Towards Safe and Explainable Code for Automated Schema Refactoring*. LLM4Code@ICSE. | ICSE Workshop | Define la tarea **DDL-to-DDL** enfocada en refactorización segura y explicable de FKs, PKs y normalización. | [Estado del Arte Original](Estado_del_Arte_Original.md) |

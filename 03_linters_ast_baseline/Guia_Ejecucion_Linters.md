@@ -1,6 +1,6 @@
 # Miembro 3: análisis estático de los tres DDL
 
-Ejecución local del 8 de noviembre de 2026 en la rama `miembro3/trabajo`. Se analizaron únicamente `case1_pagila/schema_defective.sql`, `case2_northwind/schema_defective.sql` y `case3_synthetic/schema_defective.sql`. Las huellas de esos archivos se conservan en [`inputs.sha256.txt`](inputs.sha256.txt). Los DDL y los manifiestos no se modificaron.
+Ejecución local del 8 de noviembre de 2026 (originalmente en la rama `miembro3/trabajo`, estandarizada posteriormente como `linters-ast-baseline`). Se analizaron únicamente [`case1_pagila/schema_defective.sql`](../02_benchmark_sql_backend/case1_pagila/schema_defective.sql), [`case2_northwind/schema_defective.sql`](../02_benchmark_sql_backend/case2_northwind/schema_defective.sql) y [`case3_synthetic/schema_defective.sql`](../02_benchmark_sql_backend/case3_synthetic/schema_defective.sql). Las huellas de esos archivos se conservan en [`inputs.sha256.txt`](inputs.sha256.txt). Los DDL y los manifiestos no se modificaron.
 
 ## Configuración
 
@@ -26,7 +26,7 @@ SonarScanner indexó los tres DDL como lenguaje `sql` y ejecutó `SQLSensor` con
 
 Un [control SQL independiente](sonarqube/header_control.sql), analizado en otro proyecto local, activó `SQLCC:C030`; su [respuesta de la API](sonarqube/control_issues.json) se conserva por separado. Confirma esa regla concreta sin atribuir al plugin una cobertura que no se probó.
 
-Estos diagnósticos **no equivalen a defectos relacionales detectados**. La [Fase 8](<Analisis de Resultados.md>) compara cada salida con los 28 defectos de los manifiestos. En esta ejecución y con el criterio documentado, ambas herramientas obtuvieron 0 TP y 28 FN para las cuatro clases relacionales evaluadas; ese resultado no se extrapola a otros esquemas ni configuraciones.
+Estos diagnósticos **no equivalen a defectos relacionales detectados**. La [Fase 8](Analisis_de_Resultados.md) compara cada salida con los 28 defectos de los manifiestos. En esta ejecución y con el criterio documentado, ambas herramientas obtuvieron 0 TP y 28 FN para las cuatro clases relacionales evaluadas; ese resultado no se extrapola a otros esquemas ni configuraciones.
 
 ## Evidencias conservadas
 
@@ -34,7 +34,7 @@ Estos diagnósticos **no equivalen a defectos relacionales detectados**. La [Fas
 - [`sonarqube/results/2026-11-08`](sonarqube/results/2026-11-08): `issues.json`, `files.json`, `measures.json`, `task.json`, versión del plugin, perfil y reglas activas, registros de escáner y servidor, versiones e imágenes con digestos.
 - [`sonarqube-dashboard.jpeg`](sonarqube/results/2026-11-08/sonarqube-dashboard.jpeg): captura del panel con la sesión iniciada; muestra el proyecto y sus tres incidencias abiertas.
 - [`header_control.sql`](sonarqube/header_control.sql) y [`control_issues.json`](sonarqube/control_issues.json): fuente y resultado del control independiente de SonarQube.
-- [`matriz_deteccion.csv`](matriz_deteccion.csv) y [`Analisis de Resultados.md`](<Analisis de Resultados.md>): correspondencia individual, métricas observadas y límites de interpretación.
+- [`matriz_deteccion.csv`](matriz_deteccion.csv) y [`Analisis_de_Resultados.md`](Analisis_de_Resultados.md): correspondencia individual, métricas observadas y límites de interpretación.
 
 ## Repetición
 
@@ -42,10 +42,10 @@ Desde la raíz del repositorio, para SQLFluff:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r m3\requirements.txt
-.\.venv\Scripts\sqlfluff.exe lint case1_pagila\schema_defective.sql --format json
-.\.venv\Scripts\sqlfluff.exe lint case2_northwind\schema_defective.sql --format json
-.\.venv\Scripts\sqlfluff.exe lint case3_synthetic\schema_defective.sql --format json
+.\.venv\Scripts\python.exe -m pip install -r 03_linters_ast_baseline\requirements.txt
+.\.venv\Scripts\sqlfluff.exe lint 02_benchmark_sql_backend\case1_pagila\schema_defective.sql --format json
+.\.venv\Scripts\sqlfluff.exe lint 02_benchmark_sql_backend\case2_northwind\schema_defective.sql --format json
+.\.venv\Scripts\sqlfluff.exe lint 02_benchmark_sql_backend\case3_synthetic\schema_defective.sql --format json
 ```
 
 Para SonarQube, iniciar Community Build con el JAR de `sonar-sql-plugin` 1.4.0 en su carpeta de plugins y disponer de un token de análisis local en `SONAR_TOKEN`. Con el servidor disponible en `http://127.0.0.1:9000`, ejecutar desde la raíz:

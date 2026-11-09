@@ -71,8 +71,8 @@ un `GET /peliculas?feature=Trailers` que parsee el CSV (no incluido: los 3 endpo
 | Miembro | Archivos |
 |---|---|
 | 1 (SLR) | esta ficha + `defects_manifest.json` (citar taxonomía y conteos) |
-| 3 (linters) | `case*/schema_defective.sql`. Ejecución documentada en `m3/Analisis de Resultados.md`: SQLFluff no emitió errores `PRS`/`LXR`/`TMP` y registró `CP03`, `CP05`, `LT01`, `LT02` y `RF04`; SonarQube registró tres `SQLCC:C030`. Ningún hallazgo correspondió a los 28 defectos relacionales del manifiesto. |
-| 4 (agente MCP) | `docker-compose.yml` o `scripts/setup_databases.sh` → BD `*_defective` pobladas; `defects_manifest.json` como verdad de terreno; `known_native_smells` para no contar falsos positivos |
+| 3 (linters) | `case*/schema_defective.sql`. Ejecución documentada en [`03_linters_ast_baseline/Analisis_de_Resultados.md`](../03_linters_ast_baseline/Analisis_de_Resultados.md): SQLFluff no emitió errores `PRS`/`LXR`/`TMP` y registró `CP03`, `CP05`, `LT01`, `LT02` y `RF04`; SonarQube registró tres `SQLCC:C030`. Ningún hallazgo correspondió a los 28 defectos relacionales del manifiesto. |
+| 4 (agente MCP) | `../docker-compose.yml` o `scripts/setup_databases.sh` → BD `*_defective` pobladas; `defects_manifest.json` como verdad de terreno; `known_native_smells` para no contar falsos positivos |
 | 5 (métricas) | `backend_defensive/` vs `backend_normalized/` (mismo contrato de API); marcadores `DEFENSIVE-BEGIN/END`; `tools/measure_defensive.py` |
 
 ## 5. Resultado de verificación

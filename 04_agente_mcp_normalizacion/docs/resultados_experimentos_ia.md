@@ -41,8 +41,8 @@ flowchart TD
         C1["1. Capa de Configuración (2 archivos)<br/>- config/inference_config.json<br/>- config/mcp_postgres.json"]
         C2["2. Capa de Habilidad Agentica (1 archivo)<br/>- skills/postgres-schema-auditor/SKILL.md"]
         C3["3. Capa de Herramientas y Validación (3 archivos)<br/>- tools/dry_run_validator.py<br/>- tools/introspect_db.py<br/>- tools/run_benchmark_suite.py"]
-        C4["4. Capa de Resultados DDL Experimentales (9 archivos)<br/>- case1_pagila/resultados_experimentos_m4/ (3 SQL)<br/>- case2_northwind/resultados_experimentos_m4/ (3 SQL)<br/>- case3_synthetic/resultados_experimentos_m4/ (3 SQL)"]
-        C5["5. Capa de Documentación Científica (1 archivo)<br/>- docs/matriz_experimentos_ia.md"]
+        C4["4. Capa de Resultados DDL Experimentales (9 archivos)<br/>- resultados_experimentos/case1_pagila/ (3 SQL)<br/>- resultados_experimentos/case2_northwind/ (3 SQL)<br/>- resultados_experimentos/case3_synthetic/ (3 SQL)"]
+        C5["5. Capa de Documentación Científica (1 archivo)<br/>- docs/resultados_experimentos_ia.md"]
     end
 ```
 
@@ -56,16 +56,16 @@ flowchart TD
 | [`tools/dry_run_validator.py`](../tools/dry_run_validator.py) | Herramienta de Validación | Implementa el arnés transaccional protegido (`BEGIN ... ROLLBACK`) en PostgreSQL 16 para probar DDLs sin efectos colaterales persistentes. | Proporciona el oráculo determinista que evalúa la ejecutabilidad sintáctica y referencial de los DDLs generados por los LLMs. |
 | [`tools/introspect_db.py`](../tools/introspect_db.py) | Herramienta de Auditoría | Utilidad de introspección programática que consulta `information_schema` y extrae esquemas, tipos y muestras de tuplas vivas. | Otorga visibilidad activa al agente sobre el catálogo real, eliminando el problema del "vuelo a ciegas" de los chatbots tradicionales. |
 | [`tools/run_benchmark_suite.py`](../tools/run_benchmark_suite.py) | Orquestador Automatizado | Suite de ejecución en lote que corre y valida de forma secuencial los 9 experimentos (EXP-01 a EXP-09) en el contenedor Docker. | Automatiza la recolección de métricas, tasas de compilación, detección de alucinaciones y captura de códigos de error PostgreSQL. |
-| [`case1_pagila/resultados_experimentos_m4/exp01_ddl_zeroshot.sql`](../case1_pagila/resultados_experimentos_m4/exp01_ddl_zeroshot.sql) | DDL Experimental | Script DDL generado para Pagila bajo condición Zero-Shot directa. | Evidencia empírica del fallo por alucinación de catálogo (código `42830`: invención de la tabla `ratings`). |
-| [`case1_pagila/resultados_experimentos_m4/exp02_ddl_cot.sql`](../case1_pagila/resultados_experimentos_m4/exp02_ddl_cot.sql) | DDL Experimental | Script DDL generado para Pagila bajo condición Chain-of-Thought (CoT). | Evidencia empírica del fallo por omisión de saneamiento de datos huérfanos (código `23503`: `inventory.film_id = 999`). |
-| [`case1_pagila/resultados_experimentos_m4/exp03_ddl_agent_optimized.sql`](../case1_pagila/resultados_experimentos_m4/exp03_ddl_agent_optimized.sql) | DDL Experimental | Script DDL refactorizado y compilado al 100% por el Agente Autónomo con MCP y Dry-Run en 2 iteraciones. | Demuestra la resolución exitosa de los 10 defectos de Pagila con depuración previa de huérfanos y normalización a 3FN. |
-| [`case2_northwind/resultados_experimentos_m4/exp04_ddl_zeroshot.sql`](../case2_northwind/resultados_experimentos_m4/exp04_ddl_zeroshot.sql) | DDL Experimental | Script DDL generado para Northwind bajo condición Zero-Shot directa. | Evidencia empírica del fallo por alucinación de columnas clave (código `42703`: asume `customers.id` en lugar de `customer_id`). |
-| [`case2_northwind/resultados_experimentos_m4/exp05_ddl_cot.sql`](../case2_northwind/resultados_experimentos_m4/exp05_ddl_cot.sql) | DDL Experimental | Script DDL generado para Northwind bajo condición Chain-of-Thought (CoT). | Evidencia empírica del fallo referencial (código `23503`: tuplas huérfanas con `customer_id = 'ZZZZZ'`). |
-| [`case2_northwind/resultados_experimentos_m4/exp06_ddl_agent_optimized.sql`](../case2_northwind/resultados_experimentos_m4/exp06_ddl_agent_optimized.sql) | DDL Experimental | Script DDL refactorizado y compilado al 100% por el Agente Autónomo con MCP y Dry-Run en 2 iteraciones. | Demuestra la resolución exitosa de los 10 defectos de Northwind y normalización de atributos multivaluados y dependencias transitivas. |
-| [`case3_synthetic/resultados_experimentos_m4/exp07_ddl_zeroshot.sql`](../case3_synthetic/resultados_experimentos_m4/exp07_ddl_zeroshot.sql) | DDL Experimental | Script DDL generado para el esquema Sintético bajo condición Zero-Shot directa. | Evidencia empírica de alucinación combinada de tablas y columnas (códigos `42830` y `42703`: `ciudades` y `pedidos.id`). |
-| [`case3_synthetic/resultados_experimentos_m4/exp08_ddl_cot.sql`](../case3_synthetic/resultados_experimentos_m4/exp08_ddl_cot.sql) | DDL Experimental | Script DDL generado para el esquema Sintético bajo condición Chain-of-Thought (CoT). | Evidencia empírica de fallo referencial (código `23503`: tabla `codigos_postales` vacía y huérfano `pedido_id = 999`). |
-| [`case3_synthetic/resultados_experimentos_m4/exp09_ddl_agent_optimized.sql`](../case3_synthetic/resultados_experimentos_m4/exp09_ddl_agent_optimized.sql) | DDL Experimental | Script DDL refactorizado y compilado al 100% por el Agente Autónomo con MCP y Dry-Run en 1 sola iteración. | Demuestra la convergencia perfecta del agente resolviendo los 8 defectos sintéticos de forma proactiva y determinista. |
-| [`docs/matriz_experimentos_ia.md`](matriz_experimentos_ia.md) | Documentación Científica | Reporte maestro del benchmark experimental, diseño metodológico, tablas de contingencia y validación formal de hipótesis. | Centraliza toda la evidencia experimental y métricas cuantitativas requeridas para la sustentación académica y publicación del proyecto. |
+| [`resultados_experimentos/case1_pagila/exp01_ddl_zeroshot.sql`](../resultados_experimentos/case1_pagila/exp01_ddl_zeroshot.sql) | DDL Experimental | Script DDL generado para Pagila bajo condición Zero-Shot directa. | Evidencia empírica del fallo por alucinación de catálogo (código `42830`: invención de la tabla `ratings`). |
+| [`resultados_experimentos/case1_pagila/exp02_ddl_cot.sql`](../resultados_experimentos/case1_pagila/exp02_ddl_cot.sql) | DDL Experimental | Script DDL generado para Pagila bajo condición Chain-of-Thought (CoT). | Evidencia empírica del fallo por omisión de saneamiento de datos huérfanos (código `23503`: `inventory.film_id = 999`). |
+| [`resultados_experimentos/case1_pagila/exp03_ddl_agent_optimized.sql`](../resultados_experimentos/case1_pagila/exp03_ddl_agent_optimized.sql) | DDL Experimental | Script DDL refactorizado y compilado al 100% por el Agente Autónomo con MCP y Dry-Run en 2 iteraciones. | Demuestra la resolución exitosa de los 10 defectos de Pagila con depuración previa de huérfanos y normalización a 3FN. |
+| [`resultados_experimentos/case2_northwind/exp04_ddl_zeroshot.sql`](../resultados_experimentos/case2_northwind/exp04_ddl_zeroshot.sql) | DDL Experimental | Script DDL generado para Northwind bajo condición Zero-Shot directa. | Evidencia empírica del fallo por alucinación de columnas clave (código `42703`: asume `customers.id` en lugar de `customer_id`). |
+| [`resultados_experimentos/case2_northwind/exp05_ddl_cot.sql`](../resultados_experimentos/case2_northwind/exp05_ddl_cot.sql) | DDL Experimental | Script DDL generado para Northwind bajo condición Chain-of-Thought (CoT). | Evidencia empírica del fallo referencial (código `23503`: tuplas huérfanas con `customer_id = 'ZZZZZ'`). |
+| [`resultados_experimentos/case2_northwind/exp06_ddl_agent_optimized.sql`](../resultados_experimentos/case2_northwind/exp06_ddl_agent_optimized.sql) | DDL Experimental | Script DDL refactorizado y compilado al 100% por el Agente Autónomo con MCP y Dry-Run en 2 iteraciones. | Demuestra la resolución exitosa de los 10 defectos de Northwind y normalización de atributos multivaluados y dependencias transitivas. |
+| [`resultados_experimentos/case3_synthetic/exp07_ddl_zeroshot.sql`](../resultados_experimentos/case3_synthetic/exp07_ddl_zeroshot.sql) | DDL Experimental | Script DDL generado para el esquema Sintético bajo condición Zero-Shot directa. | Evidencia empírica de alucinación combinada de tablas y columnas (códigos `42830` y `42703`: `ciudades` y `pedidos.id`). |
+| [`resultados_experimentos/case3_synthetic/exp08_ddl_cot.sql`](../resultados_experimentos/case3_synthetic/exp08_ddl_cot.sql) | DDL Experimental | Script DDL generado para el esquema Sintético bajo condición Chain-of-Thought (CoT). | Evidencia empírica de fallo referencial (código `23503`: tabla `codigos_postales` vacía y huérfano `pedido_id = 999`). |
+| [`resultados_experimentos/case3_synthetic/exp09_ddl_agent_optimized.sql`](../resultados_experimentos/case3_synthetic/exp09_ddl_agent_optimized.sql) | DDL Experimental | Script DDL refactorizado y compilado al 100% por el Agente Autónomo con MCP y Dry-Run en 1 sola iteración. | Demuestra la convergencia perfecta del agente resolviendo los 8 defectos sintéticos de forma proactiva y determinista. |
+| [`docs/resultados_experimentos_ia.md`](resultados_experimentos_ia.md) | Documentación Científica | Reporte maestro del benchmark experimental, diseño metodológico, tablas de contingencia y validación formal de hipótesis. | Centraliza toda la evidencia experimental y métricas cuantitativas requeridas para la sustentación académica y publicación del proyecto. |
 
 ### 1.2. Explicación y Justificación de la Estructura Agregada
 
@@ -80,11 +80,11 @@ La introducción de estos 16 archivos respecto a la rama principal (`main`) resp
 3. **Capa de Herramientas y Validación Transaccional (`tools/`):**  
    En `main` existían scripts de soporte general, pero ninguno permitía evaluar DDLs de manera determinista y segura en tiempo de ejecución. `dry_run_validator.py` resuelve este problema empleando transacciones de prueba (`BEGIN ... ROLLBACK`), lo que permite que el agente detecte violaciones de integridad referencial (`23503`) o sintaxis (`42830`, `42703`) sin alterar la base de datos de producción o pruebas. `run_benchmark_suite.py` automatiza la ejecución masiva dentro del contenedor Docker para contrastar los resultados.
 
-4. **Capa de Evidencia Empírica (`case*/resultados_experimentos_m4/`):**  
+4. **Capa de Evidencia Empírica (`resultados_experimentos/case*/`):**  
    Cada uno de los 9 archivos SQL generados constituye la prueba tangible e inmutable de cómo responden los distintos niveles metodológicos (Nivel 2 Zero-Shot, Nivel 2 CoT y Nivel 3 Agente) ante esquemas con deuda técnica. Su preservación permite la auditoría independiente y asegura que los resultados expuestos en la matriz provienen de ejecuciones reales en PostgreSQL 16.
 
 5. **Capa de Documentación y Registro Maestro (`docs/`):**  
-   `matriz_experimentos_ia.md` actúa como el repositorio centralizado de resultados del Miembro 4, articulando las métricas cuantitativas, las matrices de confusión y la validación matemática de las hipótesis $H_2$ y $H_3$.
+   `resultados_experimentos_ia.md` actúa como el repositorio centralizado de resultados del Miembro 4, articulando las métricas cuantitativas, las matrices de confusión y la validación matemática de las hipótesis $H_2$ y $H_3$.
 
 ---
 
@@ -260,7 +260,7 @@ Todas las pruebas se ejecutaron con aislamiento total en el contenedor Docker de
 ### 8.1. EXP-03: Pagila (Sakila Port en PostgreSQL 16)
 * **Base de Datos Destino:** `pagila_defective`
 * **Defectos Esperados (`case1_pagila/defects_manifest.json`):** 10 defectos formales (1 de 1FN, 2 de 2FN, 2 de 3FN, 5 de FK).
-* **Script Generado:** [`case1_pagila/resultados_experimentos_m4/exp03_ddl_agent_optimized.sql`](../case1_pagila/resultados_experimentos_m4/exp03_ddl_agent_optimized.sql)
+* **Script Generado:** [`resultados_experimentos/case1_pagila/exp03_ddl_agent_optimized.sql`](../resultados_experimentos/case1_pagila/exp03_ddl_agent_optimized.sql)
 
 ```mermaid
 flowchart LR
@@ -331,7 +331,7 @@ Se genera el script DDL incorporando:
 ### 8.2. EXP-06: Northwind (PostgreSQL 16)
 * **Base de Datos Destino:** `northwind_defective`
 * **Defectos Esperados (`case2_northwind/defects_manifest.json`):** 10 defectos formales (1 de 1FN, 2 de 2FN, 1 de 3FN, 6 de FK).
-* **Script Generado:** [`case2_northwind/resultados_experimentos_m4/exp06_ddl_agent_optimized.sql`](../case2_northwind/resultados_experimentos_m4/exp06_ddl_agent_optimized.sql)
+* **Script Generado:** [`resultados_experimentos/case2_northwind/exp06_ddl_agent_optimized.sql`](../resultados_experimentos/case2_northwind/exp06_ddl_agent_optimized.sql)
 
 ```mermaid
 flowchart LR
@@ -394,7 +394,7 @@ flowchart LR
 ### 8.3. EXP-09: Sintetico de Control (DNBench Style en PostgreSQL 16)
 * **Base de Datos Destino:** `synthetic_defective`
 * **Defectos Esperados (`case3_synthetic/defects_manifest.json`):** 8 defectos formales (1 de 1FN, 2 de 2FN, 1 de 3FN, 4 de FK).
-* **Script Generado:** [`case3_synthetic/resultados_experimentos_m4/exp09_ddl_agent_optimized.sql`](../case3_synthetic/resultados_experimentos_m4/exp09_ddl_agent_optimized.sql)
+* **Script Generado:** [`resultados_experimentos/case3_synthetic/exp09_ddl_agent_optimized.sql`](../resultados_experimentos/case3_synthetic/exp09_ddl_agent_optimized.sql)
 
 ```mermaid
 flowchart LR
@@ -499,9 +499,9 @@ Con base en la evidencia empirica cuantitativa y cualitativa recolectada a trave
 
 La suite completa de los 9 experimentos se ejecuto dentro del contenedor PostgreSQL 16 (`proyectocalidaddesoftware-postgres-1`) cargando la configuracion central de inferencia determinista:
 
-* **Comando Ejecutado en Docker:**
+* **Comando en Docker (desde la estructura modular en `main`):**
   ```bash
-  docker exec proyectocalidaddesoftware-postgres-1 python3 /benchmark/tools/run_benchmark_suite.py
+  docker exec proyectocalidaddesoftware-postgres-1 python3 /benchmark/04_agente_mcp_normalizacion/tools/run_benchmark_suite.py
   ```
 
 * **Salida Consolidada del Arnes Determinista:**
@@ -510,7 +510,7 @@ La suite completa de los 9 experimentos se ejecuto dentro del contenedor Postgre
   BENCHMARK EXPERIMENTAL DE NORMALIZACION RELACIONAL (POSTGRESQL 16 DOCKER)
   Modelo de Inferencia: gemini-3.8-flash (Reasoning: high)
   Parámetros: T=0.0, Top-K=1, Top-P=1.0, Seed=42
-  Configuracion cargada desde: /benchmark/config/inference_config.json
+  Configuracion cargada desde: /benchmark/04_agente_mcp_normalizacion/config/inference_config.json
   ================================================================================
 
   [EXP-01] Pagila     | Nivel 2: Crudo (Zero-Shot)             -> [FAIL] FALLA (Código PG: 42830)

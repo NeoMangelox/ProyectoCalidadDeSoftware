@@ -26,11 +26,13 @@ import psycopg
 ROOT = Path(__file__).resolve().parent.parent
 
 def find_file(case_dir: str, filename: str) -> Path:
-    p1 = ROOT / case_dir / "resultados_experimentos_m4" / filename
+    p1 = ROOT / "resultados_experimentos" / case_dir / filename
     if p1.exists():
         return p1
-    p2 = ROOT / case_dir / filename
-    return p2
+    p2 = ROOT / case_dir / "resultados_experimentos_m4" / filename
+    if p2.exists():
+        return p2
+    return ROOT / case_dir / filename
 
 EXPERIMENTS = [
     {
